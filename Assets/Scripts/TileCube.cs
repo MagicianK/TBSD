@@ -17,6 +17,12 @@ public class TileCube : MonoBehaviour
     public Material clickedMaterial;
     public Material rangeShowMaterial;
     // Start is called before the first frame update
+    public string GetUnitInfo()
+    {
+        if(unit != null)
+            return unit.ToString();
+        return "empty";
+    }
     void Start()
     {
         gameObject.layer = LayerMask.NameToLayer("Tile");

@@ -35,9 +35,10 @@ public class MouseController : MonoBehaviour
         inRangeTiles = unit == null ? inRangeTiles : GetInRangeTiles();
         var focusedTileHit = GetFocusedTile();
         var focusedUnitHit = GetFocusedUnit();
-
         if (focusedUnitHit.HasValue)
         {
+            if(Input.GetKeyDown(KeyCode.F))
+                Debug.Log("Focused tile: " + focusedTileHit.Value.collider.GetComponent<TileCube>().GetUnitInfo());
             Unit currentUnit = focusedUnitHit.Value.collider.GetComponentInParent<Unit>();
             if (!Input.GetMouseButtonUp(0))
                 return;
@@ -111,12 +112,14 @@ public class MouseController : MonoBehaviour
         return inRangeTiles;
     }
 
+    // CHANGE: Field isBlocked of TileCube is now changing before Unit movement
     private void MoveAlongPath()
     {
         var step = speed * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
-
+        unit.standingOn.unit = null;
+        unit.standingOn.isBlocked = false;
         unit.transform.position = Vector3.MoveTowards(unit.transform.position, path[0].transform.position, step);
         unit.transform.position = new Vector3(unit.transform.position.x, yIndex, unit.transform.position.z);
 
