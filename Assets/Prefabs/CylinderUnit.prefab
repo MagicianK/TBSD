@@ -46,7 +46,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team: 0
-  standingOn: {fileID: 0}
+  focusedTile: {fileID: 0}
+  movementRange: 3
+  speed: 3
 --- !u!1001 &6453050409858182404
 PrefabInstance:
   m_ObjectHideFlags: 0
