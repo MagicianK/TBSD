@@ -15,7 +15,7 @@ public class RangeFinder
         var tileForPreviousStep = new List<TileCube>();
         tileForPreviousStep.Add(startingTile);
 
-        while(stepCount < range)
+        while (stepCount < range)
         {
             var surroundingTiles = new List<TileCube>();
 
@@ -28,17 +28,16 @@ public class RangeFinder
             stepCount++;
         }
 
-        return inRangeTiles.Distinct().ToList();  
+        return inRangeTiles.Distinct().ToList();
     }
+
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
     }
 }
