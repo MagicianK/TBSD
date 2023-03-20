@@ -14,9 +14,9 @@ public class Unit : MonoBehaviour
     public List<TileCube> inRangeTiles { get; private set; }
 
     private RangeFinder rangeFinder;
-    private int movementRange = 3;
     public bool isMoving { get; set; } = false;
     public bool isChosen { get; set; } = false;
+    public int movementRange;
     public float speed;
 
     // TODO: MAKE SPAWN METHOD TO SPAWN A UNIT
@@ -26,7 +26,6 @@ public class Unit : MonoBehaviour
         rangeFinder = new RangeFinder();
         path = new List<TileCube>();
         inRangeTiles = new List<TileCube>();
-        speed = 3;
     }
 
     private void Start()
