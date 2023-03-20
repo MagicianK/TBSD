@@ -9,25 +9,27 @@ public class UnitPlacer : MonoBehaviour
     public Unit unit1;
     public Unit unit2;
     public Unit unit3;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-    void UnitSelect()
-    {
 
+    // Start is called before the first frame update
+    private void Start()
+    {
     }
+
+    private void UnitSelect()
+    {
+    }
+
     public void PlaceUnit()
     {
-        
     }
+
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.A)){
+        /*
+         * if(Input.GetKeyDown(KeyCode.A)){
             selectedUnit = Instantiate(unit1).GetComponent<Unit>();;
-           
+
             TileCube tile = cursor.GetComponent<Cursor>().GetFocusedTile();
             tile.unit = selectedUnit;
             selectedUnit.standingOn = tile;
@@ -35,6 +37,6 @@ public class UnitPlacer : MonoBehaviour
             {
                 selectedUnit.transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
             }
-        }
+        }*/
     }
 }
