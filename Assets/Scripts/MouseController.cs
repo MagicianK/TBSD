@@ -66,7 +66,6 @@ public class MouseController : MonoBehaviour
             else if (unit && unit.isChosen && !unit.isMoving)
             {
                 cursor.transform.position = new Vector3(tileCube.transform.position.x, tileCube.transform.position.y + 0.55f, tileCube.transform.position.z);
-                cursor.GetComponent<Cursor>().SetFocusedTile(tileCube);
                 unit.focusedTile = tileCube;
                 tileObj.layer = LayerMask.NameToLayer("Clicked");
                 unit.path = pathfinder.FindPath(unit.standingOn, tileCube);
