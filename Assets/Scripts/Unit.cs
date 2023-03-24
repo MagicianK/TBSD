@@ -89,6 +89,7 @@ public class Unit : MonoBehaviour
     }
 
     // Returns a list of tiles that are available tiles to go for the unit
+    // Also sets those tiles to the "RangeShow" layer 
     public List<TileCube> GetInRangeTiles()
     {
         foreach (var item in inRangeTiles)
