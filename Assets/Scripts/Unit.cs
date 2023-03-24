@@ -19,8 +19,6 @@ public class Unit : MonoBehaviour
     public int movementRange;
     public float speed;
 
-    // TODO: MAKE SPAWN METHOD TO SPAWN A UNIT
-    // Start is called before the first frame update
     private void Awake()
     {
         rangeFinder = new RangeFinder();
@@ -32,7 +30,7 @@ public class Unit : MonoBehaviour
     {
     }
 
-    // Update is called once per frame
+    // For now it only works for movement and showing available tiles for the unit
     private void Update()
     {
         if (isChosen)
@@ -47,6 +45,7 @@ public class Unit : MonoBehaviour
         }
     }
 
+    // Deletes selected state to the unit
     public void Deselect()
     {
         isChosen = false;
@@ -56,6 +55,7 @@ public class Unit : MonoBehaviour
         }
     }
 
+    // Assigns selected state to the unit
     public void Select(TileCube tile)
     {
         isChosen = true;
@@ -64,6 +64,7 @@ public class Unit : MonoBehaviour
         GetInRangeTiles();
     }
 
+    // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
         var step = speed * Time.deltaTime;
@@ -87,6 +88,7 @@ public class Unit : MonoBehaviour
         }
     }
 
+    // Returns a list of tiles that are available tiles to go for the unit
     public List<TileCube> GetInRangeTiles()
     {
         foreach (var item in inRangeTiles)
@@ -105,6 +107,7 @@ public class Unit : MonoBehaviour
         return inRangeTiles;
     }
 
+    // Assigns standing tile to the unit
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);

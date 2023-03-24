@@ -68,6 +68,7 @@ public class Board : MonoBehaviour
         }
     }
 
+    // Just returns neighbour tiles alongside to the selected tile
     public List<TileCube> GetNeighbourTiles(TileCube currentTile)
     {
         List<TileCube> neighbours = new List<TileCube>();
