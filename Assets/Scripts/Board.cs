@@ -1,13 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class Board : MonoBehaviour
+public class Board : NetworkBehaviour
 {
     private static Board _instance;
+
     public static Board instance
     { get { return _instance; } }
+
     private Camera currentCamera;
     public TileCube tileCubePrefab;
     public GameObject groundTilesContainer;
@@ -15,6 +19,7 @@ public class Board : MonoBehaviour
     private Vector2Int currentHover;
 
     public Dictionary<Vector2Int, TileCube> map;
+    public Dictionary<int, Unit> unitIdToUnit;
 
     private void Awake()
     {
@@ -31,9 +36,30 @@ public class Board : MonoBehaviour
     private void Start()
     {
         map = new Dictionary<Vector2Int, TileCube>();
+        unitIdToUnit = new Dictionary<int, Unit>();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsServer)
+            return;
+
+        SpawnTilesClientRpc();
+    }
+
+    [ServerRpc]
+    private void SpawnTilesServerRpc()
+    {
+        SpawnTilesClientRpc();
+    }
+
+    [ClientRpc]
+    private void SpawnTilesClientRpc()
+    {
         var tileMap = gameObject.GetComponentInChildren<Tilemap>();
         BoundsInt bounds = tileMap.cellBounds;
         Debug.Log(bounds);
+
         for (int y = bounds.max.y; y > bounds.min.y; y--)
         {
             for (int z = bounds.min.z; z < bounds.max.z; z++)
@@ -52,6 +78,9 @@ public class Board : MonoBehaviour
                         tileCube.GetComponent<MeshRenderer>().sortingOrder = tileMap.GetComponent<TilemapRenderer>().sortingOrder;
                         tileCube.gridLocation = tileLocation;
                         map.Add(tilePosition, tileCube);
+
+                        if (IsServer)
+                            tileCube.NetworkObject.Spawn();
                     }
                 }
             }

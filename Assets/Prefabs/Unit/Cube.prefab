@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2423159596153095515}
   - component: {fileID: 2423159596153095512}
   - component: {fileID: 4322918816118369507}
+  - component: {fileID: 4684665950060534047}
   m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
@@ -120,3 +121,19 @@ MonoBehaviour:
   defaultMaterial: {fileID: 2100000, guid: 985609f5602762347813232b2dab7487, type: 2}
   clickedMaterial: {fileID: 2100000, guid: 639d62360d001524e94fc03cb91d6050, type: 2}
   rangeShowMaterial: {fileID: 2100000, guid: 67d34ff254365244ab0b4a67695a95c4, type: 2}
+--- !u!114 &4684665950060534047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2423159596153095510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 951099334
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1

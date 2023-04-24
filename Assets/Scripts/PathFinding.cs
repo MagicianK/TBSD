@@ -11,14 +11,14 @@ public class PathFinding : MonoBehaviour
         List<TileCube> openList = new List<TileCube>();
         List<TileCube> closedList = new List<TileCube>();
         openList.Add(start);
-        while(openList.Count > 0)
+        while (openList.Count > 0)
         {
             TileCube currentTile = openList.OrderBy(x => x.F).First();
 
             openList.Remove(currentTile);
             closedList.Add(currentTile);
 
-            if(currentTile == end)
+            if (currentTile == end)
             {
                 return GetFinishedList(start, end);
             }
@@ -27,15 +27,15 @@ public class PathFinding : MonoBehaviour
 
             foreach (var neighbour in neighbourTiles)
             {
-                if(neighbour.isBlocked || 
+                if (neighbour.isBlocked ||
                 closedList.Contains(neighbour))
-                    {
-                        continue;
-                    }
+                {
+                    continue;
+                }
                 neighbour.G = GetBlockDistance(start, neighbour);
                 neighbour.H = GetBlockDistance(end, neighbour);
 
-                neighbour.previous = currentTile;
+                neighbour.previous = currentTile.grid2DLocation;
 
                 if (!openList.Contains(neighbour))
                 {
@@ -51,10 +51,13 @@ public class PathFinding : MonoBehaviour
         List<TileCube> finishedList = new List<TileCube>();
 
         TileCube currentTile = end;
-        while(currentTile != start)
+        int counter = 0;
+        while (currentTile != start && counter < 18)
         {
             finishedList.Add(currentTile);
-            currentTile = currentTile.previous;
+            Debug.Log(currentTile.previous);
+            currentTile = Board.instance.map[currentTile.previous];
+            counter++;
         }
         finishedList.Reverse();
         return finishedList;

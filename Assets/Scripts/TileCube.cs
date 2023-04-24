@@ -1,43 +1,53 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class TileCube : MonoBehaviour
+public class TileCube : NetworkBehaviour, INetworkSerializable
 {
     public int G;
     public int H;
     public bool isBlocked;
-    public int F {get {return G+H;}}
+
+    public int F
+    { get { return G + H; } }
+
     public Unit unit;
-    public TileCube previous;
+    public int unitId = -1;
+    public Vector2Int previous;
     public Vector3Int gridLocation;
-    public Vector2Int grid2DLocation {get {return new Vector2Int(gridLocation.x, gridLocation.z);}}
+
+    public Vector2Int grid2DLocation
+    { get { return new Vector2Int(gridLocation.x, gridLocation.y); } }
+
     public Material hoverMaterial;
     public Material defaultMaterial;
     public Material clickedMaterial;
     public Material rangeShowMaterial;
+
     // Start is called before the first frame update
     public string GetUnitInfo()
     {
-        if(unit != null)
+        if (unit != null)
             return unit.ToString();
         return "empty";
     }
-    void Start()
+
+    private void Start()
     {
         gameObject.layer = LayerMask.NameToLayer("Tile");
     }
 
     public void DrawBlue()
     {
-        gameObject.GetComponent<MeshRenderer> ().material = rangeShowMaterial;
+        gameObject.GetComponent<MeshRenderer>().material = rangeShowMaterial;
     }
+
     public void DrawDefault()
     {
-        gameObject.GetComponent<MeshRenderer> ().material = defaultMaterial;
+        gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
     }
+
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (unit != null)
         {
@@ -45,7 +55,7 @@ public class TileCube : MonoBehaviour
         }
         if (gameObject.layer == LayerMask.NameToLayer("Hover"))
         {
-            gameObject.GetComponent<MeshRenderer> ().material = hoverMaterial;
+            gameObject.GetComponent<MeshRenderer>().material = hoverMaterial;
         }
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))
         {
@@ -53,15 +63,21 @@ public class TileCube : MonoBehaviour
         }
         if (gameObject.layer == LayerMask.NameToLayer("Clicked"))
         {
-            gameObject.GetComponent<MeshRenderer> ().material = clickedMaterial;
+            gameObject.GetComponent<MeshRenderer>().material = clickedMaterial;
         }
         if (gameObject.layer == LayerMask.NameToLayer("RangeShow"))
         {
             DrawBlue();
         }
     }
+
     public void ChangeLayer(LayerMask layer)
     {
         gameObject.layer = layer;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref unitId);
     }
 }

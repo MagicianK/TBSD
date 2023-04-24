@@ -1,16 +1,14 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using Unity.Netcode;
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+public class Unit : NetworkBehaviour
 {
+    public int uniqueId;
     public int team;
-    public TileCube standingOn { get; private set; }
+    public Vector2Int standingOn { get; private set; }
     public TileCube focusedTile;
     public List<TileCube> path { get; set; }
-    public MouseController mouse { get; private set; }
     public List<TileCube> inRangeTiles { get; private set; }
 
     private RangeFinder rangeFinder;
@@ -59,7 +57,7 @@ public class Unit : MonoBehaviour
     public void Select(TileCube tile)
     {
         isChosen = true;
-        standingOn = tile;
+        Board.instance.map[standingOn] = tile;
 
         GetInRangeTiles();
     }
@@ -70,8 +68,8 @@ public class Unit : MonoBehaviour
         var step = speed * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
-        standingOn.unit = null;
-        standingOn.isBlocked = false;
+        Board.instance.map[standingOn].unit = null;
+        Board.instance.map[standingOn].isBlocked = false;
         transform.position = Vector3.MoveTowards(transform.position, path[0].transform.position, step);
         transform.position = new Vector3(transform.position.x, yIndex, transform.position.z);
 
@@ -89,7 +87,7 @@ public class Unit : MonoBehaviour
     }
 
     // Returns a list of tiles that are available tiles to go for the unit
-    // Also sets those tiles to the "RangeShow" layer 
+    // Also sets those tiles to the "RangeShow" layer
     public List<TileCube> GetInRangeTiles()
     {
         foreach (var item in inRangeTiles)
@@ -98,7 +96,7 @@ public class Unit : MonoBehaviour
                 item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
         if (rangeFinder != null)
-            inRangeTiles = rangeFinder.GetTilesRange(standingOn, movementRange);
+            inRangeTiles = rangeFinder.GetTilesRange(Board.instance.map[standingOn], movementRange);
 
         foreach (var item in inRangeTiles)
         {
@@ -113,7 +111,24 @@ public class Unit : MonoBehaviour
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
         //unit.GetComponent<MeshRenderer>().sortingOrder = tile.GetComponent<MeshRenderer>().sortingOrder;
-        standingOn = tile;
+        Board.instance.map[standingOn] = tile;
         tile.unit = this;
+        standingOn = tile.grid2DLocation;
+    }
+
+    public void PositionCharacterOnTile(Vector2Int location)
+    {
+        var tileMap = Board.instance.map;
+
+        if (tileMap.ContainsKey(location))
+        {
+            var tile = tileMap[location];
+            PositionCharacterOnTile(tile);
+        }
+        else
+        {
+            Debug.Log("Error 6E");
+            Debug.Log(location);
+        }
     }
 }
