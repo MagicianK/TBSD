@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   team: 0
   focusedTile: {fileID: 0}
+  particlesChosen: {fileID: 3129189191954807665, guid: 5f656871ea9fa104caee236dbc251174, type: 3}
   movementRange: 3
   speed: 3
 --- !u!1001 &6453050409858182404

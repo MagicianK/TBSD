@@ -13,7 +13,7 @@ public class Board : MonoBehaviour
     public GameObject groundTilesContainer;
     //[SerializeField] private Tilemap tilemap;
     private Vector2Int currentHover;
-
+    public bool isFilled = false;
     public Dictionary<Vector2Int, TileCube> map;
 
     private void Awake()
@@ -56,6 +56,7 @@ public class Board : MonoBehaviour
                 }
             }
         }
+        isFilled = true;
     }
 
     // Update is called once per frame

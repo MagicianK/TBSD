@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class PathFinding : MonoBehaviour
 {
-    public List<TileCube> FindPath(TileCube start, TileCube end)
+    public static List<TileCube> FindPath(TileCube start, TileCube end)
     {
         List<TileCube> openList = new List<TileCube>();
         List<TileCube> closedList = new List<TileCube>();
@@ -46,7 +46,7 @@ public class PathFinding : MonoBehaviour
         return new List<TileCube>();
     }
 
-    private List<TileCube> GetFinishedList(TileCube start, TileCube end)
+    private static List<TileCube> GetFinishedList(TileCube start, TileCube end)
     {
         List<TileCube> finishedList = new List<TileCube>();
 
@@ -60,7 +60,7 @@ public class PathFinding : MonoBehaviour
         return finishedList;
     }
 
-    private int GetBlockDistance(TileCube start, TileCube neighbour)
+    private static int GetBlockDistance(TileCube start, TileCube neighbour)
     {
         return Mathf.Abs(start.gridLocation.x - neighbour.gridLocation.x) + Mathf.Abs(start.gridLocation.z - neighbour.gridLocation.z);
     }

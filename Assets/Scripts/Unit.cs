@@ -4,20 +4,129 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+// Unit is selected
+// Unit is in state moving 
+// Unit is in state wants to move
+// Unit is in state wants to attack
+// 
+
+public class UnitIdle : IState
+{
+    Unit owner;
+ 
+    public UnitIdle(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("UNIT IS IDLE");
+
+    }
+ 
+    public void Execute()
+    {
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("UNIT IS ACTIVE!!!!");
+    }
+}
+
+public class UnitMoveState : IState
+{
+    Unit owner;
+ 
+    public UnitMoveState(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("UNIT IS MOVING");
+        //owner.GetInRangeTiles();
+    }
+ 
+    public void Execute()
+    {
+        owner.MoveAlongPath();
+    }
+ 
+    public void Exit()
+    {
+        owner.Deselect();
+        Debug.Log("UNIT IS NOT MOVING");
+    }
+}
+
+public class UnitPrepareToMove : IState
+{
+    Unit owner;
+ 
+    public UnitPrepareToMove(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        owner.GetInRangeTiles();
+    }
+ 
+    public void Execute()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            var focusedHit = MouseController.instance.GetFocusedTile();
+            if (focusedHit.HasValue)
+            {
+                TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
+                if(owner.inRangeTiles.Contains(tc)){
+                    owner.path = PathFinding.FindPath(owner.standingOn, tc);
+                    owner.stateMachine.ChangeState(new UnitMoveState(owner));
+                }
+            }
+        }
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("exiting test state");
+    }
+}
+
+public class UnitSelected : IState
+{
+    Unit owner;
+ 
+    public UnitSelected(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("entering test state");
+    }
+ 
+    public void Execute()
+    {
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            owner.stateMachine.ChangeState(new UnitPrepareToMove(owner));
+        }
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("exiting test state");
+    }
+}
 public class Unit : MonoBehaviour
 {
+    public StateMachine stateMachine = new StateMachine();
     public int team;
     public TileCube standingOn { get; private set; }
     public TileCube focusedTile;
     public List<TileCube> path { get; set; }
     public MouseController mouse { get; private set; }
     public List<TileCube> inRangeTiles { get; private set; }
-
     private RangeFinder rangeFinder;
     public bool isMoving { get; set; } = false;
     public bool isChosen { get; set; } = false;
     public int movementRange;
-    public float speed;
+    public float speed = 10.0f;
 
     private void Awake()
     {
@@ -30,19 +139,10 @@ public class Unit : MonoBehaviour
     {
     }
 
-    // For now it only works for movement and showing available tiles for the unit
+    
     private void Update()
     {
-        if (isChosen)
-        {
-            GetInRangeTiles();
-
-            if (path.Count > 0 && inRangeTiles.Contains(focusedTile))
-            {
-                isMoving = true;
-                MoveAlongPath();
-            }
-        }
+        stateMachine.Update();
     }
 
     // Deletes selected state to the unit
@@ -53,15 +153,6 @@ public class Unit : MonoBehaviour
         {
             item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
-    }
-
-    // Assigns selected state to the unit
-    public void Select(TileCube tile)
-    {
-        isChosen = true;
-        standingOn = tile;
-
-        GetInRangeTiles();
     }
 
     // Moves the Unit along retrieved path from PathFinding script
@@ -82,10 +173,7 @@ public class Unit : MonoBehaviour
         }
 
         if (path.Count == 0)
-        {
-            GetInRangeTiles();
-            isMoving = false;
-        }
+            stateMachine.ChangeState(new UnitSelected(this));
     }
 
     // Returns a list of tiles that are available tiles to go for the unit
