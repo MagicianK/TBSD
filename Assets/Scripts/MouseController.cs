@@ -70,12 +70,6 @@ public class MouseController : NetworkBehaviour
 
             Board.instance.map.TryGetValue(tileCube.grid2DLocation, out tileCube);
 
-            foreach (var mapVal in Board.instance.map)
-            {
-                Debug.Log(mapVal);
-            }
-
-            Debug.Log(tileCube);
             if (tileCube.unitId != -1)
             {
                 chooseUnit(tileCube);
