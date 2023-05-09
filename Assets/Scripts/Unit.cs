@@ -1,21 +1,132 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
-using Unity.Netcode;
+using System.IO;
 using UnityEngine;
 
-public class Unit : NetworkBehaviour
+// Unit is selected
+// Unit is in state moving 
+// Unit is in state wants to move
+// Unit is in state wants to attack
+// 
+
+public class UnitIdle : IState
 {
-    public int uniqueId;
+    Unit owner;
+ 
+    public UnitIdle(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("UNIT IS IDLE");
+
+    }
+ 
+    public void Execute()
+    {
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("UNIT IS ACTIVE!!!!");
+    }
+}
+
+public class UnitMoveState : IState
+{
+    Unit owner;
+ 
+    public UnitMoveState(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("UNIT IS MOVING");
+        //owner.GetInRangeTiles();
+    }
+ 
+    public void Execute()
+    {
+        owner.MoveAlongPath();
+    }
+ 
+    public void Exit()
+    {
+        owner.Deselect();
+        Debug.Log("UNIT IS NOT MOVING");
+    }
+}
+
+public class UnitPrepareToMove : IState
+{
+    Unit owner;
+ 
+    public UnitPrepareToMove(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        owner.GetInRangeTiles();
+    }
+ 
+    public void Execute()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            var focusedHit = MouseController.instance.GetFocusedTile();
+            if (focusedHit.HasValue)
+            {
+                TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
+                if(owner.inRangeTiles.Contains(tc)){
+                    owner.path = PathFinding.FindPath(owner.standingOn, tc);
+                    owner.stateMachine.ChangeState(new UnitMoveState(owner));
+                }
+            }
+        }
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("exiting test state");
+    }
+}
+
+public class UnitSelected : IState
+{
+    Unit owner;
+ 
+    public UnitSelected(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("entering test state");
+    }
+ 
+    public void Execute()
+    {
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            owner.stateMachine.ChangeState(new UnitPrepareToMove(owner));
+        }
+    }
+ 
+    public void Exit()
+    {
+        Debug.Log("exiting test state");
+    }
+}
+public class Unit : MonoBehaviour
+{
+    public StateMachine stateMachine = new StateMachine();
     public int team;
-    public Vector2Int standingOn { get; private set; }
+    public TileCube standingOn { get; private set; }
     public TileCube focusedTile;
     public List<TileCube> path { get; set; }
+    public MouseController mouse { get; private set; }
     public List<TileCube> inRangeTiles { get; private set; }
-
     private RangeFinder rangeFinder;
     public bool isMoving { get; set; } = false;
     public bool isChosen { get; set; } = false;
     public int movementRange;
-    public float speed;
+    public float speed = 10.0f;
 
     private void Awake()
     {
@@ -28,19 +139,10 @@ public class Unit : NetworkBehaviour
     {
     }
 
-    // For now it only works for movement and showing available tiles for the unit
+    
     private void Update()
     {
-        if (isChosen)
-        {
-            GetInRangeTiles();
-
-            if (path.Count > 0 && inRangeTiles.Contains(focusedTile))
-            {
-                isMoving = true;
-                MoveAlongPath();
-            }
-        }
+        stateMachine.Update();
     }
 
     // Deletes selected state to the unit
@@ -53,23 +155,14 @@ public class Unit : NetworkBehaviour
         }
     }
 
-    // Assigns selected state to the unit
-    public void Select(TileCube tile)
-    {
-        isChosen = true;
-        Board.instance.map[standingOn] = tile;
-
-        GetInRangeTiles();
-    }
-
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
         var step = speed * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
-        Board.instance.map[standingOn].unit = null;
-        Board.instance.map[standingOn].isBlocked = false;
+        standingOn.unit = null;
+        standingOn.isBlocked = false;
         transform.position = Vector3.MoveTowards(transform.position, path[0].transform.position, step);
         transform.position = new Vector3(transform.position.x, yIndex, transform.position.z);
 
@@ -80,14 +173,11 @@ public class Unit : NetworkBehaviour
         }
 
         if (path.Count == 0)
-        {
-            GetInRangeTiles();
-            isMoving = false;
-        }
+            stateMachine.ChangeState(new UnitSelected(this));
     }
 
     // Returns a list of tiles that are available tiles to go for the unit
-    // Also sets those tiles to the "RangeShow" layer
+    // Also sets those tiles to the "RangeShow" layer 
     public List<TileCube> GetInRangeTiles()
     {
         foreach (var item in inRangeTiles)
@@ -96,7 +186,7 @@ public class Unit : NetworkBehaviour
                 item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
         if (rangeFinder != null)
-            inRangeTiles = rangeFinder.GetTilesRange(Board.instance.map[standingOn], movementRange);
+            inRangeTiles = rangeFinder.GetTilesRange(standingOn, movementRange);
 
         foreach (var item in inRangeTiles)
         {
@@ -111,24 +201,7 @@ public class Unit : NetworkBehaviour
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
         //unit.GetComponent<MeshRenderer>().sortingOrder = tile.GetComponent<MeshRenderer>().sortingOrder;
-        Board.instance.map[standingOn] = tile;
+        standingOn = tile;
         tile.unit = this;
-        standingOn = tile.grid2DLocation;
-    }
-
-    public void PositionCharacterOnTile(Vector2Int location)
-    {
-        var tileMap = Board.instance.map;
-
-        if (tileMap.ContainsKey(location))
-        {
-            var tile = tileMap[location];
-            PositionCharacterOnTile(tile);
-        }
-        else
-        {
-            Debug.Log("Error 6E");
-            Debug.Log(location);
-        }
     }
 }
