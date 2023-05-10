@@ -24,7 +24,6 @@ public class Idle : IState
 
     }
 }
-
 public class OnUnitState : IState
 {
     
@@ -42,7 +41,7 @@ public class OnUnitState : IState
     public void Exit()
     {
         MouseController.instance.selectedUnit.stateMachine.ChangeState(new UnitIdle(MouseController.instance.selectedUnit));
-        MouseController.instance.selectedUnit.Deselect();
+        MouseController.instance.selectedUnit.ClearRange();
         MouseController.instance.selectedUnit = null;
     }
 }
@@ -53,7 +52,7 @@ public class UnitPlaceState : IState
     {
         if (MouseController.instance.selectedUnit != null)
         {
-            MouseController.instance.selectedUnit.Deselect();
+            MouseController.instance.selectedUnit.ClearRange();
             MouseController.instance.selectedUnit = null;
         }
         Debug.Log("YOU WANT TO PLACE UNIT");
@@ -108,12 +107,8 @@ public class MouseController : MonoBehaviour
     {
         mouseStateMachine.ChangeState(new Idle());
     }
-
     private void LateUpdate()
     {
-        if (clickedUnit && clickedUnit.isMoving)
-            return;
-
         // Get clicked Tile or Unit
         var focusedTileHit = Input.GetMouseButtonUp(0) ? GetFocusedTile() : null;
         var focusedUnitHit = Input.GetMouseButtonUp(0) ? GetFocusedUnit() : null;
@@ -134,7 +129,8 @@ public class MouseController : MonoBehaviour
     public void CreateUnit(TileCube tileCube)
     {
         unitToPlace = Instantiate(unitPrefab).GetComponent<Unit>();
-        unitToPlace.PositionCharacterOnTile(tileCube);
+        unitToPlace.standingOn = tileCube;
+        unitToPlace.transform.position = tileCube.transform.position;
         unitToPlace.stateMachine.ChangeState(new UnitSelected(unitToPlace));
         selectedUnit = unitToPlace;
         unitToPlace = null;
@@ -143,20 +139,10 @@ public class MouseController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit, LayerMask.GetMask("Tile")))
-        {
-            ChangeCursorPos(hit.collider.transform);
-        }
         mouseStateMachine.Update();
     }
 
-    // Changes the red cursor to the place where mouse is pointed
-    private void ChangeCursorPos(Transform newPlace)
-    {
-        cursor.transform.position = new Vector3(newPlace.position.x, cursor.transform.position.y, newPlace.position.z);
-    }
+
     public RaycastHit? GetFocusedTile()
     {
         RaycastHit hit;
@@ -178,4 +164,5 @@ public class MouseController : MonoBehaviour
         }
         return null;
     }
+
 }

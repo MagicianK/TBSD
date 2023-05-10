@@ -117,6 +117,7 @@ MonoBehaviour:
   previous: {fileID: 0}
   gridLocation: {x: 0, y: 0, z: 0}
   hoverMaterial: {fileID: 2100000, guid: a9d8561bed36d6d4c906a7d294516fdf, type: 2}
-  defaultMaterial: {fileID: 2100000, guid: 985609f5602762347813232b2dab7487, type: 2}
+  defaultMaterial: {fileID: 2100000, guid: 88434abef275e314e85d0830ed720ebc, type: 2}
   clickedMaterial: {fileID: 2100000, guid: 639d62360d001524e94fc03cb91d6050, type: 2}
-  rangeShowMaterial: {fileID: 2100000, guid: 67d34ff254365244ab0b4a67695a95c4, type: 2}
+  rangeShowMaterial: {fileID: 2100000, guid: 5b91e1e27ff13824f8ba3d0ba4f15c8d, type: 2}
+  prevmaterial: {fileID: 0}

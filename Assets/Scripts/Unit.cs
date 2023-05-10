@@ -41,7 +41,8 @@ public class UnitMoveState : IState
     public void Enter()
     {
         Debug.Log("UNIT IS MOVING");
-        //owner.GetInRangeTiles();
+        owner.standingOn.unit = null;
+        owner.standingOn.isBlocked = false;
     }
  
     public void Execute()
@@ -51,11 +52,49 @@ public class UnitMoveState : IState
  
     public void Exit()
     {
-        owner.Deselect();
+        owner.ClearRange();
         Debug.Log("UNIT IS NOT MOVING");
     }
 }
 
+public class UnitInChargeState : IState
+{
+    Unit owner;
+ 
+    public UnitInChargeState(Unit owner) { this.owner = owner; }
+    
+    public void Enter()
+    {
+        Debug.Log("Unit is in charge");
+        owner.GetInRangeTiles();
+    }
+ 
+    public void Execute()
+    {
+        if (Input.GetMouseButtonUp(0))
+        {
+            IDamagable prey = null;
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit))
+            {
+                prey = hit.collider.gameObject.GetComponent<IDamagable>();
+            }
+            
+            if(prey != null && owner.inRangeTiles.Contains(prey.GetStandingOnTile()))
+            {
+                prey.TakeDamage(1);
+                owner.stateMachine.ChangeState(new UnitSelected(owner));
+            }
+        }
+    }
+    
+    public void Exit()
+    {
+        owner.ClearRange();
+        Debug.Log("Unit is cool from charge");
+    }
+}
 public class UnitPrepareToMove : IState
 {
     Unit owner;
@@ -64,6 +103,7 @@ public class UnitPrepareToMove : IState
     
     public void Enter()
     {
+        Debug.Log("Unit is preparing to move");
         owner.GetInRangeTiles();
     }
  
@@ -75,17 +115,20 @@ public class UnitPrepareToMove : IState
             if (focusedHit.HasValue)
             {
                 TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
-                if(owner.inRangeTiles.Contains(tc)){
-                    owner.path = PathFinding.FindPath(owner.standingOn, tc);
-                    owner.stateMachine.ChangeState(new UnitMoveState(owner));
-                }
+                CanIgoThere(tc);
             }
         }
     }
- 
+    private void CanIgoThere(TileCube tc)
+    {
+        if(owner.inRangeTiles.Contains(tc) && !tc.isBlocked){
+            owner.path = PathFinding.FindPath(owner.standingOn, tc);
+            owner.stateMachine.ChangeState(new UnitMoveState(owner));
+        }
+    }
     public void Exit()
     {
-        Debug.Log("exiting test state");
+        Debug.Log("Unit is prepared to move");
     }
 }
 
@@ -97,7 +140,7 @@ public class UnitSelected : IState
     
     public void Enter()
     {
-        Debug.Log("entering test state");
+        Debug.Log("Unit is selected");
     }
  
     public void Execute()
@@ -106,49 +149,61 @@ public class UnitSelected : IState
         {
             owner.stateMachine.ChangeState(new UnitPrepareToMove(owner));
         }
+        else if(Input.GetKeyDown(KeyCode.A))
+        {
+            owner.stateMachine.ChangeState(new UnitInChargeState(owner));
+        }
     }
  
     public void Exit()
     {
-        Debug.Log("exiting test state");
+        Debug.Log("Unit is unselected");
     }
 }
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour, IDamagable, IHealable
 {
-    public StateMachine stateMachine = new StateMachine();
-    public int team;
-    public TileCube standingOn { get; private set; }
-    public TileCube focusedTile;
-    public List<TileCube> path { get; set; }
-    public MouseController mouse { get; private set; }
-    public List<TileCube> inRangeTiles { get; private set; }
-    private RangeFinder rangeFinder;
-    public bool isMoving { get; set; } = false;
-    public bool isChosen { get; set; } = false;
-    public int movementRange;
-    public float speed = 10.0f;
 
+    public StateMachine stateMachine = new StateMachine();
+    public Player team;
+    public TileCube standingOn { get; set; }    
+    public List<TileCube> path { get; set; }
+    public List<TileCube> inRangeTiles { get; private set; }
+    [SerializeField]
+    private UnitData unitData;
+    private int health;
+    private int maxHealth;
+    private const float MOVEMENT_ANIMATION_SPEED = 10f;
     private void Awake()
     {
-        rangeFinder = new RangeFinder();
+        maxHealth = unitData.Health;
+        health = maxHealth;
         path = new List<TileCube>();
         inRangeTiles = new List<TileCube>();
     }
-
+    public TileCube GetStandingOnTile(){
+        return standingOn;
+    }
     private void Start()
     {
     }
 
-    
+    private void OnMouseDown() {
+        // If mouse is in Idle state unit can be selected
+        if(MouseController.instance.mouseStateMachine.currentState is Idle)
+        {
+            stateMachine.ChangeState(new UnitSelected(this));
+            MouseController.instance.selectedUnit = this;
+            MouseController.instance.mouseStateMachine.ChangeState(new OnUnitState());
+        }
+    }
     private void Update()
     {
         stateMachine.Update();
     }
 
-    // Deletes selected state to the unit
-    public void Deselect()
+    // Clears range of attack or movement
+    public void ClearRange()
     {
-        isChosen = false;
         foreach (var item in inRangeTiles)
         {
             item.ChangeLayer(LayerMask.NameToLayer("Tile"));
@@ -158,11 +213,9 @@ public class Unit : MonoBehaviour
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
-        var step = speed * Time.deltaTime;
+        var step = MOVEMENT_ANIMATION_SPEED * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
-        standingOn.unit = null;
-        standingOn.isBlocked = false;
         transform.position = Vector3.MoveTowards(transform.position, path[0].transform.position, step);
         transform.position = new Vector3(transform.position.x, yIndex, transform.position.z);
 
@@ -171,7 +224,10 @@ public class Unit : MonoBehaviour
             PositionCharacterOnTile(path[0]);
             path.RemoveAt(0);
         }
-
+        if (path.Count == 1){
+            standingOn = path[0];
+            standingOn.unit = this;
+        }
         if (path.Count == 0)
             stateMachine.ChangeState(new UnitSelected(this));
     }
@@ -185,13 +241,14 @@ public class Unit : MonoBehaviour
             if (item.gameObject.layer != LayerMask.NameToLayer("Hover"))
                 item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
-        if (rangeFinder != null)
-            inRangeTiles = rangeFinder.GetTilesRange(standingOn, movementRange);
+
+        inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
 
         foreach (var item in inRangeTiles)
         {
             if (item.gameObject.layer != LayerMask.NameToLayer("Hover"))
                 item.ChangeLayer(LayerMask.NameToLayer("RangeShow"));
+                
         }
         return inRangeTiles;
     }
@@ -200,8 +257,16 @@ public class Unit : MonoBehaviour
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
-        //unit.GetComponent<MeshRenderer>().sortingOrder = tile.GetComponent<MeshRenderer>().sortingOrder;
-        standingOn = tile;
-        tile.unit = this;
+    }
+
+    public void TakeDamage(int damage){
+        this.health -= damage;
+        if(this.health <= 0)
+            Destroy(gameObject);
+    }
+
+    public void TakeHeal(int heal){
+        if (this.health != this.maxHealth)
+            this.health += heal;
     }
 }

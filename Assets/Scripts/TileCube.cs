@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TileCube : MonoBehaviour
 {
+    public Player player;
     public int G;
     public int H;
     public bool isBlocked;
@@ -16,6 +17,7 @@ public class TileCube : MonoBehaviour
     public Material defaultMaterial;
     public Material clickedMaterial;
     public Material rangeShowMaterial;
+    public Material prevmaterial;
     // Start is called before the first frame update
     public string GetUnitInfo()
     {
@@ -26,8 +28,18 @@ public class TileCube : MonoBehaviour
     void Start()
     {
         gameObject.layer = LayerMask.NameToLayer("Tile");
+        gameObject.GetComponent<MeshRenderer> ().material = defaultMaterial;
+        prevmaterial = defaultMaterial;
     }
-
+    private void OnMouseDown() {
+        Debug.Log("grid location of cube: " + gridLocation);
+        Debug.Log("Does cube has unit: " + ((unit != null) || (player != null)));
+    }
+    private void OnMouseEnter() {
+        Transform trans = MouseController.instance.cursor.transform;
+        Vector3 pos = new Vector3(gameObject.transform.position.x, trans.position.y, gameObject.transform.position.z);
+        MouseController.instance.cursor.transform.position = pos;
+    }
     public void DrawBlue()
     {
         gameObject.GetComponent<MeshRenderer> ().material = rangeShowMaterial;
@@ -43,17 +55,9 @@ public class TileCube : MonoBehaviour
         {
             isBlocked = true;
         }
-        if (gameObject.layer == LayerMask.NameToLayer("Hover"))
-        {
-            gameObject.GetComponent<MeshRenderer> ().material = hoverMaterial;
-        }
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))
         {
             DrawDefault();
-        }
-        if (gameObject.layer == LayerMask.NameToLayer("Clicked"))
-        {
-            gameObject.GetComponent<MeshRenderer> ().material = clickedMaterial;
         }
         if (gameObject.layer == LayerMask.NameToLayer("RangeShow"))
         {
