@@ -10,155 +10,157 @@ using UnityEngine;
 // Unit is in state wants to attack
 // 
 
-public class UnitIdle : IState
-{
-    Unit owner;
- 
-    public UnitIdle(Unit owner) { this.owner = owner; }
+namespace UnitStates{
+    public class Idle : IState
+    {
+        Unit owner;
     
-    public void Enter()
-    {
-        Debug.Log("UNIT IS IDLE");
-
-    }
- 
-    public void Execute()
-    {
-    }
- 
-    public void Exit()
-    {
-        Debug.Log("UNIT IS ACTIVE!!!!");
-    }
-}
-
-public class UnitMoveState : IState
-{
-    Unit owner;
- 
-    public UnitMoveState(Unit owner) { this.owner = owner; }
-    
-    public void Enter()
-    {
-        Debug.Log("UNIT IS MOVING");
-        owner.standingOn.unit = null;
-        owner.standingOn.isBlocked = false;
-    }
- 
-    public void Execute()
-    {
-        owner.MoveAlongPath();
-    }
- 
-    public void Exit()
-    {
-        owner.ClearRange();
-        Debug.Log("UNIT IS NOT MOVING");
-    }
-}
-
-public class UnitInChargeState : IState
-{
-    Unit owner;
- 
-    public UnitInChargeState(Unit owner) { this.owner = owner; }
-    
-    public void Enter()
-    {
-        Debug.Log("Unit is in charge");
-        owner.GetInRangeTiles();
-    }
- 
-    public void Execute()
-    {
-        if (Input.GetMouseButtonUp(0))
+        public Idle(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
         {
-            IDamagable prey = null;
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
-            {
-                prey = hit.collider.gameObject.GetComponent<IDamagable>();
-                Debug.Log("YOU HIT SOMEONE " + prey.GetType());
-            }
-            
-            if(prey != null && owner.inRangeTiles.Contains(prey.GetStandingOnTile()))
-            {
-                prey.TakeDamage(1);
-                owner.stateMachine.ChangeState(new UnitSelected(owner));
-            }
+            Debug.Log("UNIT IS IDLE");
+
+        }
+    
+        public void Execute()
+        {
+        }
+    
+        public void Exit()
+        {
+            Debug.Log("UNIT IS ACTIVE!!!!");
         }
     }
+
+    public class Moving : IState
+    {
+        Unit owner;
     
-    public void Exit()
-    {
-        owner.ClearRange();
-        Debug.Log("Unit is cool from charge");
-    }
-}
-public class UnitPrepareToMove : IState
-{
-    Unit owner;
- 
-    public UnitPrepareToMove(Unit owner) { this.owner = owner; }
-    
-    public void Enter()
-    {
-        Debug.Log("Unit is preparing to move");
-        owner.GetInRangeTiles();
-    }
- 
-    public void Execute()
-    {
-        if (Input.GetMouseButtonUp(0))
+        public Moving(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
         {
-            var focusedHit = MouseController.instance.GetFocusedTile();
-            if (focusedHit.HasValue)
+            Debug.Log("UNIT IS MOVING");
+            owner.standingOn.unit = null;
+            owner.standingOn.isBlocked = false;
+        }
+    
+        public void Execute()
+        {
+            owner.MoveAlongPath();
+        }
+    
+        public void Exit()
+        {
+            owner.ClearRange();
+            Debug.Log("UNIT IS NOT MOVING");
+        }
+    }
+
+    public class InCharge : IState
+    {
+        Unit owner;
+    
+        public InCharge(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
+        {
+            Debug.Log("Unit is in charge");
+            owner.GetInRangeTiles();
+        }
+    
+        public void Execute()
+        {
+            if (Input.GetMouseButtonUp(0))
             {
-                TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
-                CanIgoThere(tc);
+                IDamagable prey = null;
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out hit))
+                {
+                    prey = hit.collider.gameObject.GetComponent<IDamagable>();
+                    Debug.Log("YOU HIT SOMEONE " + prey.GetType());
+                }
+                
+                if(prey != null && owner.inRangeTiles.Contains(prey.GetStandingOnTile()))
+                {
+                    prey.TakeDamage(1);
+                    owner.stateMachine.ChangeState(new Selected(owner));
+                }
             }
         }
-    }
-    private void CanIgoThere(TileCube tc)
-    {
-        if(owner.inRangeTiles.Contains(tc) && !tc.isBlocked){
-            owner.path = PathFinding.FindPath(owner.standingOn, tc);
-            owner.stateMachine.ChangeState(new UnitMoveState(owner));
+        
+        public void Exit()
+        {
+            owner.ClearRange();
+            Debug.Log("Unit is cool from charge");
         }
     }
-    public void Exit()
+    public class PrepareToMove : IState
     {
-        Debug.Log("Unit is prepared to move");
-    }
-}
-
-public class UnitSelected : IState
-{
-    Unit owner;
- 
-    public UnitSelected(Unit owner) { this.owner = owner; }
+        Unit owner;
     
-    public void Enter()
-    {
-        Debug.Log("Unit is selected");
-    }
- 
-    public void Execute()
-    {
-        if (Input.GetKeyDown(KeyCode.M))
+        public PrepareToMove(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
         {
-            owner.stateMachine.ChangeState(new UnitPrepareToMove(owner));
+            Debug.Log("Unit is preparing to move");
+            owner.GetInRangeTiles();
         }
-        else if(Input.GetKeyDown(KeyCode.A))
+    
+        public void Execute()
         {
-            owner.stateMachine.ChangeState(new UnitInChargeState(owner));
+            if (Input.GetMouseButtonUp(0))
+            {
+                var focusedHit = MouseController.instance.GetFocusedTile();
+                if (focusedHit.HasValue)
+                {
+                    TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
+                    CanIgoThere(tc);
+                }
+            }
+        }
+        private void CanIgoThere(TileCube tc)
+        {
+            if(owner.inRangeTiles.Contains(tc) && !tc.isBlocked){
+                owner.path = PathFinding.FindPath(owner.standingOn, tc);
+                owner.stateMachine.ChangeState(new Moving(owner));
+            }
+        }
+        public void Exit()
+        {
+            Debug.Log("Unit is prepared to move");
         }
     }
- 
-    public void Exit()
+
+    public class Selected : IState
     {
-        Debug.Log("Unit is unselected");
+        Unit owner;
+    
+        public Selected(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
+        {
+            Debug.Log("Unit is selected");
+        }
+    
+        public void Execute()
+        {
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                owner.stateMachine.ChangeState(new PrepareToMove(owner));
+            }
+            else if(Input.GetKeyDown(KeyCode.A))
+            {
+                owner.stateMachine.ChangeState(new InCharge(owner));
+            }
+        }
+    
+        public void Exit()
+        {
+            Debug.Log("Unit is unselected");
+        }
     }
 }
 public class Unit : MonoBehaviour, IDamagable, IHealable
@@ -190,11 +192,11 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
 
     private void OnMouseDown() {
         // If mouse is in Idle state unit can be selected
-        if(MouseController.instance.mouseStateMachine.currentState is Idle)
+        if(MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
         {
-            stateMachine.ChangeState(new UnitSelected(this));
+            stateMachine.ChangeState(new UnitStates.Selected(this));
             MouseController.instance.selectedUnit = this;
-            MouseController.instance.mouseStateMachine.ChangeState(new OnUnitState());
+            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
         }
     }
     private void Update()
@@ -230,7 +232,7 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
             standingOn.unit = this;
         }
         if (path.Count == 0)
-            stateMachine.ChangeState(new UnitSelected(this));
+            stateMachine.ChangeState(new UnitStates.Selected(this));
     }
 
     // Returns a list of tiles that are available tiles to go for the unit

@@ -2,62 +2,64 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BaseIdle : IState
-{
-    Player owner;
- 
-    public BaseIdle(Player owner) { this.owner = owner; }
-    
-    public void Enter()
-    {
-        Debug.Log("Base Idle");
-    }
- 
-    public void Execute()
-    {
 
-    }
- 
-    public void Exit()
+namespace PlayerBaseStates{
+    public class Idle : IState
     {
-        Debug.Log("Base is active");
-    }
-}
-
-public class BaseSelected : IState
-{
-    Player owner;
+        Player owner;
     
-    public BaseSelected(Player owner) { this.owner = owner; }
-    
-    public void Enter()
-    {
-        Debug.Log("Base selected");
-    }
- 
-    public void Execute()
-    {
-        if(Input.GetKeyDown(KeyCode.Alpha1))
+        public Idle(Player owner) { this.owner = owner; }
+        
+        public void Enter()
         {
-            Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
-            List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
+            Debug.Log("Base Idle");
+        }
+    
+        public void Execute()
+        {
 
-            foreach (var tile in tiles)
+        }
+    
+        public void Exit()
+        {
+            Debug.Log("Base is active");
+        }
+    }
+
+    public class Selected : IState
+    {
+        Player owner;
+        
+        public Selected(Player owner) { this.owner = owner; }
+        
+        public void Enter()
+        {
+            Debug.Log("Base selected");
+        }
+    
+        public void Execute()
+        {
+            if(Input.GetKeyDown(KeyCode.Alpha1))
             {
-                if(!tile.isBlocked){
-                    MouseController.instance.CreateUnit(tile);
-                    break;
+                Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
+                List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
+
+                foreach (var tile in tiles)
+                {
+                    if(!tile.isBlocked){
+                        MouseController.instance.CreateUnit(tile);
+                        break;
+                    }
                 }
             }
         }
-    }
- 
-    public void Exit()
-    {
-        Debug.Log("Base unselected");
+    
+        public void Exit()
+        {
+            Debug.Log("Base unselected");
+        }
     }
 }
-
 public class Player : MonoBehaviour, IDamagable
 {
     public Unit unit1;
@@ -75,7 +77,7 @@ public class Player : MonoBehaviour, IDamagable
     // Start is called before the first frame update
     void Start()
     {
-        stateMachine.ChangeState(new BaseIdle(this));
+        stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
     }
@@ -98,9 +100,9 @@ public class Player : MonoBehaviour, IDamagable
 
     private void OnMouseDown() {
         Debug.Log("You clicked base");
-        if (MouseController.instance.mouseStateMachine.currentState is Idle){
-            MouseController.instance.mouseStateMachine.ChangeState(new OnPlayerBaseState(this));
-            stateMachine.ChangeState(new BaseSelected(this));
+        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle){
+            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(this));
+            stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }
     }
     private void OnMouseEnter() {
