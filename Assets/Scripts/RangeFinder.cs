@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class RangeFinder
 {
-    public List<TileCube> GetTilesRange(TileCube startingTile, int range)
+    public static List<TileCube> GetTilesRange(TileCube startingTile, int range)
     {
         var inRangeTiles = new List<TileCube>();
         int stepCount = 0;
