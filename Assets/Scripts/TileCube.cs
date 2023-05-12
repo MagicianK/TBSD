@@ -31,10 +31,10 @@ public class TileCube : MonoBehaviour
         gameObject.GetComponent<MeshRenderer> ().material = defaultMaterial;
         prevmaterial = defaultMaterial;
     }
-    private void OnMouseDown() {
-        Debug.Log("grid location of cube: " + gridLocation);
-        Debug.Log("Does cube has unit: " + ((unit != null) || (player != null)));
-    }
+    // private void OnMouseDown() {
+    //     Debug.Log("grid location of cube: " + gridLocation);
+    //     Debug.Log("Does cube has unit: " + ((unit != null) || (player != null)));
+    // }
     private void OnMouseEnter() {
         Transform trans = MouseController.instance.cursor.transform;
         Vector3 pos = new Vector3(gameObject.transform.position.x, trans.position.y, gameObject.transform.position.z);

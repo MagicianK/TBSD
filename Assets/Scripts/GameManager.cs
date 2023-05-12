@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 public interface IState
 {
     public void Enter();
@@ -12,6 +13,7 @@ public interface IDamagable
 {
     public void TakeDamage(int damage);
     public TileCube GetStandingOnTile();
+    public int GetPreyTeam();
 }
 
 public interface IHealable
@@ -40,12 +42,13 @@ public class StateMachine
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
-    private Player playerBase0;
+    private Player playerBasePrefab0;
     [SerializeField]
+    private Player playerBasePrefab1;
+    private Player playerBase0;
     private Player playerBase1;
-
-    private Player player0;
-    private Player player1;
+    public TurnSystem turnSystem;
+    public Text text;
     private static GameManager _instance;
     public static GameManager instance
     { get { return _instance; } }
@@ -62,7 +65,8 @@ public class GameManager : MonoBehaviour
     }
     private void Start() {
         StartCoroutine(CreatePlayerBases());
-
+        turnSystem = new TurnSystem();
+        turnSystem.text = text; // Temporary solution
     }
     IEnumerator CreatePlayerBases()
     {
@@ -71,19 +75,21 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         TileCube tc1 = Board.instance.map[new Vector2Int(-6, 1)];
-        player0 = Instantiate(playerBase0);
-        player0.standingOn = tc1;
-        player0.transform.position = tc1.transform.position;
+        playerBase0 = Instantiate(playerBasePrefab0);
+        playerBase0.standingOn = tc1;
+        playerBase0.transform.position = tc1.transform.position;
+        playerBase0.team = 0;
         tc1.isBlocked = true;
-        tc1.player = player0;
+        tc1.player = playerBase0;
 
 
         TileCube tc2 = Board.instance.map[new Vector2Int(25, 1)];
-        player1 = Instantiate(playerBase1);
-        player1.standingOn = tc2;
-        player1.transform.position = tc2.transform.position;
+        playerBase1 = Instantiate(playerBasePrefab1);
+        playerBase1.standingOn = tc2;
+        playerBase1.transform.position = tc2.transform.position;
+        playerBase1.team = 1;
         tc2.isBlocked = true;
-        tc2.player = player1;
+        tc2.player = playerBase1;
     }
  
     private void Update() {

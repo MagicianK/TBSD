@@ -12,7 +12,7 @@ namespace PlayerBaseStates{
         
         public void Enter()
         {
-            Debug.Log("Base Idle");
+
         }
     
         public void Execute()
@@ -22,7 +22,7 @@ namespace PlayerBaseStates{
     
         public void Exit()
         {
-            Debug.Log("Base is active");
+ 
         }
     }
 
@@ -34,20 +34,20 @@ namespace PlayerBaseStates{
         
         public void Enter()
         {
-            Debug.Log("Base selected");
+
         }
     
         public void Execute()
         {
             if(Input.GetKeyDown(KeyCode.Alpha1))
             {
-                Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
+                //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
                 List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
 
                 foreach (var tile in tiles)
                 {
                     if(!tile.isBlocked){
-                        MouseController.instance.CreateUnit(tile);
+                        owner.CreateUnit(tile);
                         break;
                     }
                 }
@@ -56,21 +56,22 @@ namespace PlayerBaseStates{
     
         public void Exit()
         {
-            Debug.Log("Base unselected");
+
         }
     }
 }
 public class Player : MonoBehaviour, IDamagable
 {
-    public Unit unit1;
-    public Unit unit2;
-    public Unit unit3;
-
+    public Unit unit1prefab;
+    public Unit unit2prefab;
+    public Unit unit3prefab;
+    public int team;
     public int points = 5000;
     public StateMachine stateMachine = new StateMachine();
-    public int turnCredits = 100;
+    public Unit unitToPlace;
     [SerializeField]
     private UnitData unitData;
+    public List<Unit> units;
     private int health;
     public TileCube standingOn;
     Color startColor;
@@ -80,27 +81,53 @@ public class Player : MonoBehaviour, IDamagable
         stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
+        units = new List<Unit>();
     }
 
     private void Update() {
         stateMachine.Update();
+        if (GameManager.instance.turnSystem.currentTeam != this.team)
+        {
+            foreach (Unit unit in units)
+            {
+                unit.stateMachine.ChangeState(new UnitStates.Idle(unit));
+                unit.GetComponent<Unit>().enabled = false;
+            }
+        }
+        else{
+            foreach (Unit unit in units)
+            {
+                unit.GetComponent<Unit>().enabled = true;
+            }
+        }
     }
     public TileCube GetStandingOnTile(){
         return standingOn;
+    }
+    
+    public int GetPreyTeam(){
+        return this.team;
     }
     public void TakeDamage(int damage){
         this.health -= damage;
         if(this.health <= 0)
             Destroy(gameObject);
     }
-    public void takeTurnCredits(int turnCreditWeight)
+    
+    public void CreateUnit(TileCube tileCube)
     {
-
+        unitToPlace = Instantiate(unit1prefab);
+        unitToPlace.standingOn = tileCube;
+        tileCube.isBlocked = true;
+        unitToPlace.transform.position = tileCube.transform.position;
+        unitToPlace.InitValues(this.team, this);
+        MouseController.instance.selectedUnit = unitToPlace;
+        units.Add(unitToPlace);
+        unitToPlace = null;
     }
-
     private void OnMouseDown() {
-        Debug.Log("You clicked base");
-        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle){
+        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle &&
+            GameManager.instance.turnSystem.currentTeam == this.team){
             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(this));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }

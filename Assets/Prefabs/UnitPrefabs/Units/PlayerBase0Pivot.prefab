@@ -59,11 +59,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9277ff2b73da3084584b54268e9a30d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unit1: {fileID: 4797079833479046658, guid: 5db438f00202c544a895cf96f7b1ebc0, type: 3}
+  unit1prefab: {fileID: 952577593068286369, guid: 34546383180bffc45bffb2a742fb6389, type: 3}
   unit2: {fileID: 0}
   unit3: {fileID: 0}
+  team: 0
   points: 5000
-  turnCredits: 100
+  unitToPlace: {fileID: 0}
   unitData: {fileID: 11400000, guid: 1dc9c3a98de596549b8bee381f48a356, type: 2}
   standingOn: {fileID: 0}
 --- !u!1001 &3042767621020210158

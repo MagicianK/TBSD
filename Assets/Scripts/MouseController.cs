@@ -11,15 +11,14 @@ namespace MouseStates
         
         public void Enter()
         {
-            Debug.Log("YOU ENTERED ON IDLE STATE");
         }
     
         public void Execute()
         {
-            if(Input.GetKeyDown(KeyCode.P))
-            {
-                MouseController.instance.mouseStateMachine.ChangeState(new UnitPlaceState());
-            }
+            // if(Input.GetKeyDown(KeyCode.P))
+            // {
+            //     MouseController.instance.mouseStateMachine.ChangeState(new UnitPlaceState());
+            // }
         }
     
         public void Exit()
@@ -47,7 +46,7 @@ namespace MouseStates
     
         public void Exit()
         {
-            playerBase.stateMachine.ChangeState(new PlayerBaseStates.Selected(playerBase));
+            playerBase.stateMachine.ChangeState(new PlayerBaseStates.Idle(playerBase));
         }
     }
     public class OnUnitState : IState
@@ -55,7 +54,7 @@ namespace MouseStates
         
         public void Enter()
         {
-            Debug.Log("YOU ENTERED ON UNIT STATE");
+
         }
     
         public void Execute()
@@ -72,37 +71,37 @@ namespace MouseStates
             MouseController.instance.selectedUnit = null;
         }
     }
-    public class UnitPlaceState : IState
-    {
+    // public class UnitPlaceState : IState
+    // {
         
-        public void Enter()
-        {
-            if (MouseController.instance.selectedUnit != null)
-            {
-                MouseController.instance.selectedUnit.ClearRange();
-                MouseController.instance.selectedUnit = null;
-            }
-            Debug.Log("YOU WANT TO PLACE UNIT");
-        }
+    //     public void Enter()
+    //     {
+    //         if (MouseController.instance.selectedUnit != null)
+    //         {
+    //             MouseController.instance.selectedUnit.ClearRange();
+    //             MouseController.instance.selectedUnit = null;
+    //         }
+    //         Debug.Log("YOU WANT TO PLACE UNIT");
+    //     }
     
-        public void Execute()
-        {
-            var focusedTileHit = Input.GetMouseButtonUp(0) ? MouseController.instance.GetFocusedTile() : null;
-            if (Input.GetMouseButtonUp(0) && focusedTileHit.HasValue)
-            {
-                TileCube clickedTile = focusedTileHit.Value.collider.gameObject.GetComponent<TileCube>();
-                MouseController.instance.CreateUnit(clickedTile);
-                MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
-            }
-        }
+    //     public void Execute()
+    //     {
+    //         var focusedTileHit = Input.GetMouseButtonUp(0) ? MouseController.instance.GetFocusedTile() : null;
+    //         if (Input.GetMouseButtonUp(0) && focusedTileHit.HasValue)
+    //         {
+    //             TileCube clickedTile = focusedTileHit.Value.collider.gameObject.GetComponent<TileCube>();
+    //             MouseController.instance.CreateUnit(clickedTile);
+    //             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
+    //         }
+    //     }
     
-        public void Exit()
-        {
-            Unit selectedUnit = MouseController.instance.selectedUnit; 
-            selectedUnit.stateMachine.ChangeState(new UnitStates.Selected(selectedUnit));
-            Debug.Log("IDLE");
-        }
-    }
+    //     public void Exit()
+    //     {
+    //         Unit selectedUnit = MouseController.instance.selectedUnit; 
+    //         selectedUnit.stateMachine.ChangeState(new UnitStates.Selected(selectedUnit));
+    //         Debug.Log("IDLE");
+    //     }
+    // }
 }
 public class MouseController : MonoBehaviour
 {
@@ -152,16 +151,6 @@ public class MouseController : MonoBehaviour
         {
             clickedTile = focusedTileHit.Value.collider.gameObject.GetComponent<TileCube>();
         }
-    }
-
-    public void CreateUnit(TileCube tileCube)
-    {
-        unitToPlace = Instantiate(unitPrefab);
-        unitToPlace.standingOn = tileCube;
-        tileCube.isBlocked = true;
-        unitToPlace.transform.position = tileCube.transform.position;
-        selectedUnit = unitToPlace;
-        unitToPlace = null;
     }
 
     // Update is called once per frame
