@@ -10,7 +10,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI playerNameText;
     [SerializeField] private Button kickPlayerButton;
 
-    private Player player;
+    private Unity.Services.Lobbies.Models.Player player;
 
     private void Awake()
     {
@@ -22,7 +22,7 @@ public class LobbyPlayerSingleUI : MonoBehaviour
         kickPlayerButton.gameObject.SetActive(visible);
     }
 
-    public void UpdatePlayer(Player player)
+    public void UpdatePlayer(Unity.Services.Lobbies.Models.Player player)
     {
         this.player = player;
         playerNameText.text = player.Data[LobbyManager.KEY_PLAYER_NAME].Value;

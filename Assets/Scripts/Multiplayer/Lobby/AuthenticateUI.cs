@@ -11,6 +11,7 @@ public class AuthenticateUI : MonoBehaviour
     {
         authenticateButton.onClick.AddListener(() =>
         {
+            Debug.Log("Authenticated");
             LobbyManager.Instance.Authenticate(EditPlayerName.Instance.GetPlayerName());
             Hide();
         });

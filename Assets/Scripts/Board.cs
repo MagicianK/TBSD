@@ -17,6 +17,7 @@ public class Board : NetworkBehaviour
     public GameObject groundTilesContainer;
     //[SerializeField] private Tilemap tilemap;
     private Vector2Int currentHover;
+
     public bool isFilled = false;
     public Dictionary<Vector2Int, TileCube> map;
     public Dictionary<int, Unit> unitIdToUnit;
@@ -85,7 +86,6 @@ public class Board : NetworkBehaviour
                 }
             }
         }
-        isFilled = true;
     }
 
     // Update is called once per frame

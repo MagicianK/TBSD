@@ -156,7 +156,7 @@ public class LobbyManager : MonoBehaviour
     {
         if (joinedLobby != null && joinedLobby.Players != null)
         {
-            foreach (Player player in joinedLobby.Players)
+            foreach (Unity.Services.Lobbies.Models.Player player in joinedLobby.Players)
             {
                 if (player.Id == AuthenticationService.Instance.PlayerId)
                 {
@@ -168,16 +168,16 @@ public class LobbyManager : MonoBehaviour
         return false;
     }
 
-    private Player GetPlayer()
+    private Unity.Services.Lobbies.Models.Player GetPlayer()
     {
-        return new Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
+        return new Unity.Services.Lobbies.Models.Player(AuthenticationService.Instance.PlayerId, null, new Dictionary<string, PlayerDataObject> {
             { KEY_PLAYER_NAME, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Public, playerName) }
         });
     }
 
     public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate)
     {
-        Player player = GetPlayer();
+        Unity.Services.Lobbies.Models.Player player = GetPlayer();
 
         CreateLobbyOptions options = new CreateLobbyOptions
         {
@@ -232,7 +232,7 @@ public class LobbyManager : MonoBehaviour
 
     public async void JoinLobbyByCode(string lobbyCode)
     {
-        Player player = GetPlayer();
+        Unity.Services.Lobbies.Models.Player player = GetPlayer();
 
         Lobby lobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, new JoinLobbyByCodeOptions
         {
@@ -246,7 +246,7 @@ public class LobbyManager : MonoBehaviour
 
     public async void JoinLobby(Lobby lobby)
     {
-        Player player = GetPlayer();
+        Unity.Services.Lobbies.Models.Player player = GetPlayer();
 
         joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobby.Id, new JoinLobbyByIdOptions
         {

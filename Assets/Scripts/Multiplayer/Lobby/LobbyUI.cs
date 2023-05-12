@@ -63,7 +63,7 @@ public class LobbyUI : MonoBehaviour
     {
         ClearLobby();
 
-        foreach (Player player in lobby.Players)
+        foreach (Unity.Services.Lobbies.Models.Player player in lobby.Players)
         {
             Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
             playerSingleTransform.gameObject.SetActive(true);
