@@ -71,11 +71,13 @@ public class Player : MonoBehaviour, IDamagable
     private UnitData unitData;
     private int health;
     public TileCube standingOn;
+    Color startColor;
     // Start is called before the first frame update
     void Start()
     {
         stateMachine.ChangeState(new BaseIdle(this));
         health = unitData.Health;
+        startColor = GetComponentInChildren<Renderer>().material.color;
     }
 
     private void Update() {
@@ -96,6 +98,15 @@ public class Player : MonoBehaviour, IDamagable
 
     private void OnMouseDown() {
         Debug.Log("You clicked base");
-        stateMachine.ChangeState(new BaseSelected(this));
+        if (MouseController.instance.mouseStateMachine.currentState is Idle){
+            MouseController.instance.mouseStateMachine.ChangeState(new OnPlayerBaseState(this));
+            stateMachine.ChangeState(new BaseSelected(this));
+        }
+    }
+    private void OnMouseEnter() {
+        GetComponentInChildren<Renderer>().material.color = Color.white;
+    }
+    private void OnMouseExit() {
+       GetComponentInChildren<Renderer>().material.color = startColor; 
     }
 }

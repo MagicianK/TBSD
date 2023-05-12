@@ -43,8 +43,10 @@ public class GameManager : MonoBehaviour
     private Player playerBase0;
     [SerializeField]
     private Player playerBase1;
+
+    private Player player0;
+    private Player player1;
     private static GameManager _instance;
-    TileCube tc;
     public static GameManager instance
     { get { return _instance; } }
 
@@ -68,20 +70,20 @@ public class GameManager : MonoBehaviour
         {
             yield return null;
         }
-        tc = Board.instance.map[new Vector2Int(-6, 1)];
-        Instantiate(playerBase0);
-        playerBase0.standingOn = tc;
-        playerBase0.transform.position = tc.transform.position;
-        tc.isBlocked = true;
-        tc.player = playerBase0;
+        TileCube tc1 = Board.instance.map[new Vector2Int(-6, 1)];
+        player0 = Instantiate(playerBase0);
+        player0.standingOn = tc1;
+        player0.transform.position = tc1.transform.position;
+        tc1.isBlocked = true;
+        tc1.player = player0;
 
 
-        tc = Board.instance.map[new Vector2Int(25, 1)];
-        Instantiate(playerBase1);
-        playerBase1.standingOn = tc;
-        playerBase1.transform.position = tc.transform.position;
-        tc.isBlocked = true;
-        tc.player = playerBase1;
+        TileCube tc2 = Board.instance.map[new Vector2Int(25, 1)];
+        player1 = Instantiate(playerBase1);
+        player1.standingOn = tc2;
+        player1.transform.position = tc2.transform.position;
+        tc2.isBlocked = true;
+        tc2.player = player1;
     }
  
     private void Update() {

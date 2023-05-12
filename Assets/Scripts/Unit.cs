@@ -79,6 +79,7 @@ public class UnitInChargeState : IState
             if (Physics.Raycast(ray, out hit))
             {
                 prey = hit.collider.gameObject.GetComponent<IDamagable>();
+                Debug.Log("YOU HIT SOMEONE " + prey.GetType());
             }
             
             if(prey != null && owner.inRangeTiles.Contains(prey.GetStandingOnTile()))

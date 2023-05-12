@@ -24,6 +24,29 @@ public class Idle : IState
 
     }
 }
+
+public class OnPlayerBaseState: IState
+{
+    Player playerBase;
+    public OnPlayerBaseState(Player playerBase){
+        this.playerBase = playerBase;
+    }
+    public void Enter()
+    {
+
+    }
+ 
+    public void Execute()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape))
+            MouseController.instance.mouseStateMachine.ChangeState(new Idle());
+    }
+ 
+    public void Exit()
+    {
+        playerBase.stateMachine.ChangeState(new BaseIdle(playerBase));
+    }
+}
 public class OnUnitState : IState
 {
     
@@ -128,10 +151,10 @@ public class MouseController : MonoBehaviour
 
     public void CreateUnit(TileCube tileCube)
     {
-        unitToPlace = Instantiate(unitPrefab).GetComponent<Unit>();
+        unitToPlace = Instantiate(unitPrefab);
         unitToPlace.standingOn = tileCube;
+        tileCube.isBlocked = true;
         unitToPlace.transform.position = tileCube.transform.position;
-        unitToPlace.stateMachine.ChangeState(new UnitSelected(unitToPlace));
         selectedUnit = unitToPlace;
         unitToPlace = null;
     }
