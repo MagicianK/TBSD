@@ -1,66 +1,66 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-
-namespace PlayerBaseStates{
+namespace PlayerBaseStates
+{
     public class Idle : IState
     {
-        Player owner;
-    
-        public Idle(Player owner) { this.owner = owner; }
-        
+        private Player owner;
+
+        public Idle(Player owner)
+        { this.owner = owner; }
+
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
-
         }
-    
+
         public void Exit()
         {
- 
         }
     }
 
     public class Selected : IState
     {
-        Player owner;
-        
-        public Selected(Player owner) { this.owner = owner; }
-        
+        private Player owner;
+
+        public Selected(Player owner)
+        { this.owner = owner; }
+
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
-            if(Input.GetKeyDown(KeyCode.Alpha1))
+            if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
                 List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
 
                 foreach (var tile in tiles)
                 {
-                    if(!tile.isBlocked){
+                    if (!tile.isBlocked)
+                    {
                         owner.CreateUnit(tile);
                         break;
                     }
                 }
             }
         }
-    
+
         public void Exit()
         {
-
         }
     }
 }
-public class Player : MonoBehaviour, IDamagable
+
+public class Player : NetworkBehaviour, IDamagable
 {
     public Unit unit1prefab;
     public Unit unit2prefab;
@@ -71,12 +71,14 @@ public class Player : MonoBehaviour, IDamagable
     public Unit unitToPlace;
     [SerializeField]
     private UnitData unitData;
+
     public List<Unit> units;
     private int health;
     public TileCube standingOn;
-    Color startColor;
+    private Color startColor;
+
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
         health = unitData.Health;
@@ -84,8 +86,14 @@ public class Player : MonoBehaviour, IDamagable
         units = new List<Unit>();
     }
 
-    private void Update() {
+    private void Update()
+    {
         stateMachine.Update();
+        if (GameManager.instance.turnSystem == null)
+        {
+            return;
+        }
+
         if (GameManager.instance.turnSystem.currentTeam != this.team)
         {
             foreach (Unit unit in units)
@@ -94,29 +102,37 @@ public class Player : MonoBehaviour, IDamagable
                 unit.GetComponent<Unit>().enabled = false;
             }
         }
-        else{
+        else
+        {
             foreach (Unit unit in units)
             {
                 unit.GetComponent<Unit>().enabled = true;
             }
         }
     }
-    public TileCube GetStandingOnTile(){
+
+    public TileCube GetStandingOnTile()
+    {
         return standingOn;
     }
-    
-    public int GetPreyTeam(){
+
+    public int GetPreyTeam()
+    {
         return this.team;
     }
-    public void TakeDamage(int damage){
+
+    public void TakeDamage(int damage)
+    {
         this.health -= damage;
-        if(this.health <= 0)
+        if (this.health <= 0)
             Destroy(gameObject);
     }
-    
+
     public void CreateUnit(TileCube tileCube)
     {
         unitToPlace = Instantiate(unit1prefab);
+        unitToPlace.NetworkObject.Spawn();
+
         unitToPlace.standingOn = tileCube;
         tileCube.isBlocked = true;
         unitToPlace.transform.position = tileCube.transform.position;
@@ -125,17 +141,24 @@ public class Player : MonoBehaviour, IDamagable
         units.Add(unitToPlace);
         unitToPlace = null;
     }
-    private void OnMouseDown() {
+
+    private void OnMouseDown()
+    {
         if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle &&
-            GameManager.instance.turnSystem.currentTeam == this.team){
+            GameManager.instance.turnSystem.currentTeam == this.team)
+        {
             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(this));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }
     }
-    private void OnMouseEnter() {
+
+    private void OnMouseEnter()
+    {
         GetComponentInChildren<Renderer>().material.color = Color.white;
     }
-    private void OnMouseExit() {
-       GetComponentInChildren<Renderer>().material.color = startColor; 
+
+    private void OnMouseExit()
+    {
+        GetComponentInChildren<Renderer>().material.color = startColor;
     }
 }

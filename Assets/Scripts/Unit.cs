@@ -2,69 +2,72 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.Netcode;
 using UnityEngine;
 
-
-namespace UnitStates{
-
+namespace UnitStates
+{
     public class Death : IState
     {
-        Unit stateOwner;
-    
-        public Death(Unit owner) { this.stateOwner = owner; }
-        
+        private Unit stateOwner;
+
+        public Death(Unit owner)
+        { this.stateOwner = owner; }
+
         public void Enter()
         {
             stateOwner.owner.units.Remove(stateOwner);
         }
-    
+
         public void Execute()
         {
             stateOwner.Dead();
         }
-    
+
         public void Exit()
         {
         }
     }
+
     public class Idle : IState
     {
-        Unit stateOwner;
-    
-        public Idle(Unit stateOwner) { this.stateOwner = stateOwner; }
-        
+        private Unit stateOwner;
+
+        public Idle(Unit stateOwner)
+        { this.stateOwner = stateOwner; }
+
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
         }
-    
+
         public void Exit()
         {
         }
     }
 
-    // BUG: Exit() procedure called two times. 
+    // BUG: Exit() procedure called two times.
     public class Moving : IState
     {
-        Unit stateOwner;
-    
-        public Moving(Unit stateOwner) { this.stateOwner = stateOwner; }
-        
+        private Unit stateOwner;
+
+        public Moving(Unit stateOwner)
+        { this.stateOwner = stateOwner; }
+
         public void Enter()
         {
             stateOwner.standingOn.unit = null;
             stateOwner.standingOn.isBlocked = false;
         }
-    
+
         public void Execute()
         {
             stateOwner.MoveAlongPath();
         }
-    
+
         public void Exit()
         {
             Debug.Log("Stopped moving");
@@ -75,15 +78,16 @@ namespace UnitStates{
 
     public class InCharge : IState
     {
-        Unit stateOwner;
-    
-        public InCharge(Unit stateOwner) { this.stateOwner = stateOwner; }
-        
+        private Unit stateOwner;
+
+        public InCharge(Unit stateOwner)
+        { this.stateOwner = stateOwner; }
+
         public void Enter()
         {
             stateOwner.GetInRangeTiles();
         }
-    
+
         public void Execute()
         {
             //Attack
@@ -96,33 +100,35 @@ namespace UnitStates{
                 {
                     prey = hit.collider.gameObject.GetComponent<IDamagable>();
                 }
-                
-                if(prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(prey.GetStandingOnTile()))
+
+                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(prey.GetStandingOnTile()))
                 {
                     prey.TakeDamage(5);
                     stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
                 }
             }
         }
-        
+
         public void Exit()
         {
             GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
+
     public class PrepareToMove : IState
     {
-        Unit stateOwner;
-    
-        public PrepareToMove(Unit stateOwner) { this.stateOwner = stateOwner; }
-        
+        private Unit stateOwner;
+
+        public PrepareToMove(Unit stateOwner)
+        { this.stateOwner = stateOwner; }
+
         public void Enter()
         {
             stateOwner.GetInRangeTiles();
             Debug.Log("Prepare to move");
         }
-    
+
         public void Execute()
         {
             if (Input.GetMouseButtonUp(0))
@@ -135,13 +141,16 @@ namespace UnitStates{
                 }
             }
         }
+
         private void CanIgoThere(TileCube tc)
         {
-            if(stateOwner.inRangeTiles.Contains(tc) && !tc.isBlocked){
+            if (stateOwner.inRangeTiles.Contains(tc) && !tc.isBlocked)
+            {
                 stateOwner.path = PathFinding.FindPath(stateOwner.standingOn, tc);
                 stateOwner.stateMachine.ChangeState(new Moving(stateOwner));
             }
         }
+
         public void Exit()
         {
         }
@@ -149,52 +158,55 @@ namespace UnitStates{
 
     public class Selected : IState
     {
-        Unit owner;
-    
-        public Selected(Unit owner) { this.owner = owner; }
-        
+        private Unit owner;
+
+        public Selected(Unit owner)
+        { this.owner = owner; }
+
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
             if (Input.GetKeyDown(KeyCode.M))
             {
                 owner.stateMachine.ChangeState(new PrepareToMove(owner));
             }
-            else if(Input.GetKeyDown(KeyCode.A))
+            else if (Input.GetKeyDown(KeyCode.A))
             {
                 owner.stateMachine.ChangeState(new InCharge(owner));
             }
         }
-    
+
         public void Exit()
         {
-
         }
     }
 }
-public class Unit : MonoBehaviour, IDamagable, IHealable
+
+public class Unit : NetworkBehaviour, IDamagable, IHealable
 {
     public Player owner;
     public StateMachine stateMachine = new StateMachine();
     public int team;
-    public TileCube standingOn { get; set; }    
+    public TileCube standingOn { get; set; }
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
     [SerializeField]
     private UnitData unitData;
+
     private int health;
     private int maxHealth;
-    Color startColor;
+    private Color startColor;
     private const float MOVEMENT_ANIMATION_SPEED = 10f;
+
     public void InitValues(int team, Player owner)
     {
         this.team = team;
         this.owner = owner;
     }
+
     private void Awake()
     {
         maxHealth = unitData.Health;
@@ -203,32 +215,42 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
         inRangeTiles = new List<TileCube>();
     }
 
-    public int GetPreyTeam(){
+    public int GetPreyTeam()
+    {
         return this.team;
     }
-    public TileCube GetStandingOnTile(){
+
+    public TileCube GetStandingOnTile()
+    {
         return standingOn;
     }
+
     private void Start()
     {
         startColor = GetComponentInChildren<Renderer>().material.color;
     }
 
-    private void OnMouseDown() {
+    private void OnMouseDown()
+    {
         // If mouse is in Idle state unit can be selected
-        if(MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
+        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
         {
             stateMachine.ChangeState(new UnitStates.Selected(this));
             MouseController.instance.selectedUnit = this;
             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
         }
     }
-    private void OnMouseEnter() {
+
+    private void OnMouseEnter()
+    {
         GetComponentInChildren<Renderer>().material.color = Color.white;
     }
-    private void OnMouseExit() {
-       GetComponentInChildren<Renderer>().material.color = startColor; 
+
+    private void OnMouseExit()
+    {
+        GetComponentInChildren<Renderer>().material.color = startColor;
     }
+
     private void Update()
     {
         stateMachine.Update();
@@ -257,11 +279,13 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
             PositionCharacterOnTile(path[0]);
             path.RemoveAt(0);
         }
-        if (path.Count == 1){
+        if (path.Count == 1)
+        {
             standingOn = path[0];
             standingOn.unit = this;
         }
-        if (path.Count == 0){
+        if (path.Count == 0)
+        {
             Debug.Log("Path counted 0");
             stateMachine.ChangeState(new UnitStates.Selected(this));
         }
@@ -269,7 +293,7 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
 
     // Returns a list of tiles that are available to go for the unit
     // Also sets those tiles to the "RangeShow" layer
-    // This is inappropriate and ugly way to do this due to side effect of function, but at least it works 
+    // This is inappropriate and ugly way to do this due to side effect of function, but at least it works
     public List<TileCube> GetInRangeTiles()
     {
         foreach (var item in inRangeTiles)
@@ -284,28 +308,31 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
         {
             if (item.gameObject.layer != LayerMask.NameToLayer("Hover"))
                 item.ChangeLayer(LayerMask.NameToLayer("RangeShow"));
-                
         }
         return inRangeTiles;
     }
 
-    // Position unit to the tile 
+    // Position unit to the tile
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
     }
 
-    public void TakeDamage(int damage){
+    public void TakeDamage(int damage)
+    {
         FindObjectOfType<SoundPlayer>().Play("Damaged");
         this.health -= damage;
-        if(this.health <= 0)
+        if (this.health <= 0)
             this.stateMachine.ChangeState(new UnitStates.Death(this));
     }
+
     public void Dead()
     {
         Destroy(gameObject);
     }
-    public void TakeHeal(int heal){
+
+    public void TakeHeal(int heal)
+    {
         if (this.health != this.maxHealth)
             this.health += heal;
     }

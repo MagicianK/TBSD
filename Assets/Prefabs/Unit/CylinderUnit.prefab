@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1228268058654970210}
   - component: {fileID: 4797079833479046658}
   - component: {fileID: -1272036014984689468}
+  - component: {fileID: -5294245263858573529}
   m_Layer: 14
   m_Name: CylinderUnit
   m_TagString: Untagged
@@ -46,7 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5cf8928a88d21c49b7899e813db9052, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  team: {fileID: 0}
+  owner: {fileID: 0}
+  team: 0
   unitData: {fileID: 11400000, guid: 1734ea77619743c43a31eaf98aa4c323, type: 2}
 --- !u!136 &-1272036014984689468
 CapsuleCollider:
@@ -62,6 +64,22 @@ CapsuleCollider:
   m_Height: 2.4378438
   m_Direction: 1
   m_Center: {x: 0, y: 1.4275746, z: 0}
+--- !u!114 &-5294245263858573529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436199897920968756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 951099334
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1001 &6453050409858182404
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,18 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-
 namespace MouseStates
-    {
+{
     public class Idle : IState
     {
-        
         public void Enter()
         {
         }
-    
+
         public void Execute()
         {
             // if(Input.GetKeyDown(KeyCode.P))
@@ -20,49 +19,49 @@ namespace MouseStates
             //     MouseController.instance.mouseStateMachine.ChangeState(new UnitPlaceState());
             // }
         }
-    
+
         public void Exit()
         {
-
         }
     }
 
-    public class OnPlayerBaseState: IState
+    public class OnPlayerBaseState : IState
     {
-        Player playerBase;
-        public OnPlayerBaseState(Player playerBase){
+        private Player playerBase;
+
+        public OnPlayerBaseState(Player playerBase)
+        {
             this.playerBase = playerBase;
         }
+
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
-            if(Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape))
                 MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
         }
-    
+
         public void Exit()
         {
             playerBase.stateMachine.ChangeState(new PlayerBaseStates.Idle(playerBase));
         }
     }
+
     public class OnUnitState : IState
     {
-        
         public void Enter()
         {
-
         }
-    
+
         public void Execute()
         {
-            if(Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape))
                 MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
         }
-    
+
         public void Exit()
         {
             Unit selectedUnit = MouseController.instance.selectedUnit;
@@ -71,9 +70,9 @@ namespace MouseStates
             MouseController.instance.selectedUnit = null;
         }
     }
+
     // public class UnitPlaceState : IState
     // {
-        
     //     public void Enter()
     //     {
     //         if (MouseController.instance.selectedUnit != null)
@@ -83,7 +82,7 @@ namespace MouseStates
     //         }
     //         Debug.Log("YOU WANT TO PLACE UNIT");
     //     }
-    
+
     //     public void Execute()
     //     {
     //         var focusedTileHit = Input.GetMouseButtonUp(0) ? MouseController.instance.GetFocusedTile() : null;
@@ -94,21 +93,24 @@ namespace MouseStates
     //             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
     //         }
     //     }
-    
+
     //     public void Exit()
     //     {
-    //         Unit selectedUnit = MouseController.instance.selectedUnit; 
+    //         Unit selectedUnit = MouseController.instance.selectedUnit;
     //         selectedUnit.stateMachine.ChangeState(new UnitStates.Selected(selectedUnit));
     //         Debug.Log("IDLE");
     //     }
     // }
 }
-public class MouseController : MonoBehaviour
+
+public class MouseController : NetworkBehaviour
 {
     // Change state of the mouse in UPDATE()
     // Handle changes in UPDATE()
     public StateMachine mouseStateMachine = new StateMachine();
+
     private static MouseController _instance;
+
     public static MouseController instance
     { get { return _instance; } }
 
@@ -118,6 +120,7 @@ public class MouseController : MonoBehaviour
     public Unit unitToPlace;
     private TileCube clickedTile;
     public Unit clickedUnit;
+
     private void Awake()
     {
         if (_instance != null && _instance != this)
@@ -129,13 +132,22 @@ public class MouseController : MonoBehaviour
             _instance = this;
         }
     }
+
+    public override void OnNetworkSpawn()
+    {
+    }
+
     // Start is called before the first frame update
     private void Start()
     {
         mouseStateMachine.ChangeState(new MouseStates.Idle());
     }
+
     private void LateUpdate()
     {
+        if (!IsOwner)
+            return;
+
         // Get clicked Tile or Unit
         var focusedTileHit = Input.GetMouseButtonUp(0) ? GetFocusedTile() : null;
         var focusedUnitHit = Input.GetMouseButtonUp(0) ? GetFocusedUnit() : null;
@@ -156,9 +168,11 @@ public class MouseController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+        if (!IsOwner)
+            return;
+
         mouseStateMachine.Update();
     }
-
 
     public RaycastHit? GetFocusedTile()
     {
@@ -181,5 +195,4 @@ public class MouseController : MonoBehaviour
         }
         return null;
     }
-
 }

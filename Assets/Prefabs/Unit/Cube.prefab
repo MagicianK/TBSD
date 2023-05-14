@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2423159596153095515}
   - component: {fileID: 2423159596153095512}
   - component: {fileID: 4322918816118369507}
+  - component: {fileID: 2646738235081219666}
   m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
@@ -115,10 +116,26 @@ MonoBehaviour:
   H: 0
   isBlocked: 0
   unit: {fileID: 0}
-  previous: {fileID: 0}
+  previous: {x: 0, y: 0}
   gridLocation: {x: 0, y: 0, z: 0}
   hoverMaterial: {fileID: 2100000, guid: a9d8561bed36d6d4c906a7d294516fdf, type: 2}
   defaultMaterial: {fileID: 2100000, guid: 88434abef275e314e85d0830ed720ebc, type: 2}
   clickedMaterial: {fileID: 2100000, guid: 639d62360d001524e94fc03cb91d6050, type: 2}
   rangeShowMaterial: {fileID: 2100000, guid: 5b91e1e27ff13824f8ba3d0ba4f15c8d, type: 2}
   prevmaterial: {fileID: 0}
+--- !u!114 &2646738235081219666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2423159596153095510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 951099334
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1

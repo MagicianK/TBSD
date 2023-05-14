@@ -20,7 +20,6 @@ public class Board : NetworkBehaviour
 
     public bool isFilled = false;
     public Dictionary<Vector2Int, TileCube> map;
-    public Dictionary<int, Unit> unitIdToUnit;
 
     private void Awake()
     {
@@ -37,7 +36,6 @@ public class Board : NetworkBehaviour
     private void Start()
     {
         map = new Dictionary<Vector2Int, TileCube>();
-        unitIdToUnit = new Dictionary<int, Unit>();
     }
 
     public override void OnNetworkSpawn()
@@ -86,6 +84,8 @@ public class Board : NetworkBehaviour
                 }
             }
         }
+
+        isFilled = true;
     }
 
     // Update is called once per frame
