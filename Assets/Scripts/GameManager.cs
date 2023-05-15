@@ -25,8 +25,6 @@ public interface IDamagable
 public interface IHealable
 {
     public void TakeHeal(int heal);
-
-    public TileCube GetStandingOnTile();
 }
 
 public class StateMachine

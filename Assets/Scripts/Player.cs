@@ -100,6 +100,7 @@ public class Player : NetworkBehaviour, IDamagable
             {
                 unit.stateMachine.ChangeState(new UnitStates.Idle(unit));
                 unit.GetComponent<Unit>().enabled = false;
+                unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
             }
         }
         else
@@ -107,10 +108,14 @@ public class Player : NetworkBehaviour, IDamagable
             foreach (Unit unit in units)
             {
                 unit.GetComponent<Unit>().enabled = true;
+                unit.GetComponentInChildren<Renderer>().material.color = startColor;
             }
         }
     }
-
+    private void OnDestroy()
+    {
+        Debug.Log($"Player {this.team - 1}");
+    }
     public TileCube GetStandingOnTile()
     {
         return standingOn;
@@ -141,9 +146,9 @@ public class Player : NetworkBehaviour, IDamagable
         units.Add(unitToPlace);
         unitToPlace = null;
     }
-
     private void OnMouseDown()
     {
+        // Enables selection state only if Mouse state is Idle and it is their turn
         if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle &&
             GameManager.instance.turnSystem.currentTeam == this.team)
         {

@@ -10,6 +10,7 @@ namespace MouseStates
     {
         public void Enter()
         {
+            SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
         }
 
         public void Execute()
