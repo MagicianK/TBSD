@@ -59,8 +59,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9277ff2b73da3084584b54268e9a30d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unit1prefab: {fileID: 952577593068286369, guid: 34546383180bffc45bffb2a742fb6389, type: 3}
-  unit2prefab: {fileID: 0}
+  unit1prefab: {fileID: 7351157971639899907, guid: 75773b1a2adf74a438d30b5d6a39e8f4, type: 3}
+  unit2prefab: {fileID: 952577593068286369, guid: 34546383180bffc45bffb2a742fb6389, type: 3}
   unit3prefab: {fileID: 0}
   team: 0
   points: 5000
@@ -68,6 +68,7 @@ MonoBehaviour:
   unitData: {fileID: 11400000, guid: 1dc9c3a98de596549b8bee381f48a356, type: 2}
   units: []
   standingOn: {fileID: 0}
+  startColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1001 &3042767621020210158
 PrefabInstance:
   m_ObjectHideFlags: 0

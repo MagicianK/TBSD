@@ -4,29 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-
 namespace UnitStates{
-
-    public class Death : IState
-    {
-        Unit stateOwner;
-    
-        public Death(Unit owner) { this.stateOwner = owner; }
-        
-        public void Enter()
-        {
-            stateOwner.owner.units.Remove(stateOwner);
-        }
-    
-        public void Execute()
-        {
-
-        }
-    
-        public void Exit()
-        {
-        }
-    }
     public class Idle : IState
     {
         Unit stateOwner;
@@ -58,6 +36,7 @@ namespace UnitStates{
         {
             stateOwner.standingOn.unit = null;
             stateOwner.standingOn.isBlocked = false;
+            GameManager.instance.turnSystem.MakeTurn();
         }
     
         public void Execute()
@@ -68,7 +47,6 @@ namespace UnitStates{
         public void Exit()
         {
             Debug.Log("Stopped moving");
-            GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
@@ -190,14 +168,41 @@ namespace UnitStates{
             {
                 owner.stateMachine.ChangeState(new InCharge(owner));
             }
+            else if(Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                owner.stateMachine.ChangeState(new OnAbilityState(owner));
+            }
         }
     
         public void Exit()
         {
         }
     }
+    public class OnAbilityState : IState
+    {
+        Unit owner;
+    
+        public OnAbilityState(Unit owner) { this.owner = owner; }
+        
+        public void Enter()
+        {
+            owner.GetInRangeTiles();
+            owner.ability.Activate(owner);
+        }
+    
+        public void Execute()
+        {
+
+        }
+    
+        public void Exit()
+        {
+            owner.ability.Deactivate();
+            owner.ClearRange();
+        }
+    }
 }
-public class Unit : MonoBehaviour
+public class Unit : MonoBehaviour, ISwitchable
 {
     public Player owner;
     public StateMachine stateMachine = new StateMachine();
@@ -209,7 +214,9 @@ public class Unit : MonoBehaviour
     private UnitData unitData;
     public int maxHealth;
     Color startColor;
+    List<Color> colors = new List<Color>{Color.green, Color.blue, Color.cyan};
     private const float MOVEMENT_ANIMATION_SPEED = 10f;
+    public IAbility ability;
     public void InitValues(int team, Player owner)
     {
         this.team = team;
@@ -223,9 +230,16 @@ public class Unit : MonoBehaviour
     }
     private void Start()
     {
-        startColor = GetComponentInChildren<Renderer>().material.color;
+        TryGetComponent<IAbility>(out ability);
+        int randomNumber = UnityEngine.Random.Range(0,2);
+        startColor = colors[randomNumber];
+        GetComponentInChildren<Renderer>().material.color = Color.blue;
     }
-
+    public void Switch(TileCube tile)
+    {
+        this.transform.position = tile.transform.position;
+        this.standingOn = tile;
+    }
     private void OnMouseDown() {
         // If mouse is in Idle state unit can be selected
         if(MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
@@ -307,5 +321,15 @@ public class Unit : MonoBehaviour
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
+    }
+
+    public int GetPreyTeam()
+    {
+        return this.team;
+    }
+
+    public TileCube GetStandingOnTile()
+    {
+        return this.standingOn;
     }
 }

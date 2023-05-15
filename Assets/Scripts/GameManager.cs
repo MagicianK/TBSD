@@ -9,6 +9,12 @@ public interface IState
     public void Exit();
 }
 
+public interface ISwitchable
+{
+    public int GetPreyTeam();
+    public TileCube GetStandingOnTile();
+    public void Switch(TileCube tile); 
+}
 public interface IDamagable
 {
     public void TakeDamage(int damage);
@@ -19,6 +25,11 @@ public interface IDamagable
 public interface IHealable
 {
     public void TakeHeal(int heal);
+}
+public interface IAbility
+{
+    public void Activate(Unit owner);
+    public void Deactivate();
 }
 public class StateMachine
 {
@@ -63,9 +74,9 @@ public class GameManager : MonoBehaviour
         }
     }
     private void Start() {
-        StartCoroutine(CreatePlayerBases());
         turnSystem = new TurnSystem();
         turnSystem.text = text; // Temporary solution
+        StartCoroutine(CreatePlayerBases());
     }
     IEnumerator CreatePlayerBases()
     {

@@ -16,14 +16,15 @@ public class TurnSystem : MonoBehaviour
 
     public void MakeTurn()
     {
-        turns -= 1;
-        Debug.Log("Made turn");
         if(turns <= 0)
         {
             currentTeam = (currentTeam == 0) ? 1 : 0;
             turns = maxTurns;
             text.text = "Team Turn: " + currentTeam;
-            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle()); 
+            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
+            return;
         }
+        turns -= 1;
+        Debug.Log("Made turn");
     }
 }

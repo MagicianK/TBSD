@@ -34,7 +34,7 @@ namespace PlayerBaseStates{
         
         public void Enter()
         {
-
+            SelectedView.instance.MoveTo(owner.transform.position);
         }
     
         public void Execute()
@@ -47,7 +47,20 @@ namespace PlayerBaseStates{
                 foreach (var tile in tiles)
                 {
                     if(!tile.isBlocked){
-                        owner.CreateUnit(tile);
+                        owner.CreateUnit(tile, owner.unit1prefab);
+                        break;
+                    }
+                }
+            }
+            if(Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
+                List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
+
+                foreach (var tile in tiles)
+                {
+                    if(!tile.isBlocked){
+                        owner.CreateUnit(tile, owner.unit2prefab);
                         break;
                     }
                 }
@@ -56,7 +69,7 @@ namespace PlayerBaseStates{
     
         public void Exit()
         {
-
+            //SelectedView.instance.MoveTo(owner.transform.position);
         }
     }
 }
@@ -74,7 +87,7 @@ public class Player : MonoBehaviour, IDamagable
     public List<Unit> units;
     private int health;
     public TileCube standingOn;
-    Color startColor;
+    public Color startColor;
     // Start is called before the first frame update
     void Start()
     {
@@ -119,9 +132,9 @@ public class Player : MonoBehaviour, IDamagable
             Destroy(gameObject);
     }
     
-    public void CreateUnit(TileCube tileCube)
+    public void CreateUnit(TileCube tileCube, Unit unitPrefab)
     {
-        unitToPlace = Instantiate(unit1prefab);
+        unitToPlace = Instantiate(unitPrefab);
         unitToPlace.standingOn = tileCube;
         tileCube.isBlocked = true;
         unitToPlace.transform.position = tileCube.transform.position;
