@@ -76,6 +76,10 @@ namespace SwitchingAbilityStates{
         }
     }
 }
+
+// This ability is targetable
+// It switches places with target ally unit 
+// It use counts as a turn
 public class SwitchingAbility : MonoBehaviour, IAbility
 {
     public Unit unit;
