@@ -37,6 +37,7 @@ namespace UnitStates{
             stateOwner.standingOn.unit = null;
             stateOwner.standingOn.isBlocked = false;
             GameManager.instance.turnSystem.MakeTurn();
+            stateOwner.PlayMoveSound();
         }
     
         public void Execute()
@@ -168,7 +169,7 @@ namespace UnitStates{
             {
                 owner.stateMachine.ChangeState(new InCharge(owner));
             }
-            else if(Input.GetKeyDown(KeyCode.Alpha1))
+            else if(owner.ability != null && Input.GetKeyDown(KeyCode.Alpha1))
             {
                 owner.stateMachine.ChangeState(new OnAbilityState(owner));
             }
@@ -261,6 +262,7 @@ public class Unit : MonoBehaviour, ISwitchable
     }
     private void OnDestroy() {
         owner.units.Remove(this);
+        FindObjectOfType<SoundPlayer>().Play("Explosion");
     }
     // Clears range of attack or movement
     public void ClearRange()
@@ -270,7 +272,9 @@ public class Unit : MonoBehaviour, ISwitchable
             item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
     }
-
+    public void PlayMoveSound(){
+        FindObjectOfType<SoundPlayer>().Play("Move");
+    }
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {

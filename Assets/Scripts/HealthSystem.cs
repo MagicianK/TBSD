@@ -22,6 +22,7 @@ public class HealthSystem : MonoBehaviour, IDamagable
     }
     public void TakeDamage(int damage){
         this.health -= damage;
+        FindObjectOfType<SoundPlayer>().Play("Damaged");
         if(this.health <= 0)
             Destroy(gameObject);
     }

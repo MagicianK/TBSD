@@ -62,6 +62,7 @@ namespace SwitchingAbilityStates{
                     TileCube dest = stateOwner.unit.standingOn; 
                     stateOwner.unit.Switch(prey.GetStandingOnTile());
                     prey.Switch(dest);
+                    stateOwner.PlaySound();
                     stateOwner.stateMachine.ChangeState(new Idle(stateOwner));
                     stateOwner.unit.stateMachine.ChangeState(new UnitStates.Selected(stateOwner.unit));
                     GameManager.instance.turnSystem.MakeTurn();
@@ -80,6 +81,7 @@ namespace SwitchingAbilityStates{
 // This ability is targetable
 // It switches places with target ally unit 
 // It use counts as a turn
+// PROBLEM: IT CAN SWITCH WITH ITSELF
 public class SwitchingAbility : MonoBehaviour, IAbility
 {
     public Unit unit;
@@ -95,6 +97,10 @@ public class SwitchingAbility : MonoBehaviour, IAbility
     public void Deactivate()
     {
         stateMachine.ChangeState(new SwitchingAbilityStates.Idle(this));
+    }
+    public void PlaySound()
+    {
+        FindObjectOfType<SoundPlayer>().Play("Switched");
     }
     // Update is called once per frame
     void Update()

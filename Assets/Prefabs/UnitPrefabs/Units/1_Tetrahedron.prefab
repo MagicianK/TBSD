@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3290028192816857962}
   - component: {fileID: 934104532390216543}
   - component: {fileID: 7351157971639899907}
+  - component: {fileID: 5016412007583468191}
   m_Layer: 0
   m_Name: 1_Tetrahedron
   m_TagString: Untagged
@@ -63,6 +64,18 @@ MonoBehaviour:
   team: 0
   unitData: {fileID: 11400000, guid: 3faa25caf9e37ac468448becfa7f5034, type: 2}
   maxHealth: 0
+--- !u!114 &5016412007583468191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5895647563445634738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3add3a0572d16e345a5082f59d168377, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1443893480272242661
 PrefabInstance:
   m_ObjectHideFlags: 0

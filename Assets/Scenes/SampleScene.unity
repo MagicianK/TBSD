@@ -5592,6 +5592,21 @@ MonoBehaviour:
     volume: 0.517
     pitch: 1.45
     source: {fileID: 0}
+  - name: Switched
+    clip: {fileID: 8300000, guid: 8f49e23bd66e5f34395b2ddbb6f91c2d, type: 3}
+    volume: 0.474
+    pitch: 1.45
+    source: {fileID: 0}
+  - name: Explosion
+    clip: {fileID: 8300000, guid: 79d76f19a25cc2a419a1ff11bc0dc6d8, type: 3}
+    volume: 0.474
+    pitch: 1.45
+    source: {fileID: 0}
+  - name: Move
+    clip: {fileID: 8300000, guid: 8f49e23bd66e5f34395b2ddbb6f91c2d, type: 3}
+    volume: 0.316
+    pitch: 1.45
+    source: {fileID: 0}
 --- !u!4 &1363304495
 Transform:
   m_ObjectHideFlags: 0
