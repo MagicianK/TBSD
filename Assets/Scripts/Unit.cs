@@ -20,7 +20,7 @@ namespace UnitStates{
     
         public void Execute()
         {
-            stateOwner.Dead();
+
         }
     
         public void Exit()
@@ -72,7 +72,32 @@ namespace UnitStates{
             stateOwner.ClearRange();
         }
     }
-
+    public class Attack : IState
+    {
+        Unit stateOwner;
+        IDamagable prey;
+        public Attack(Unit stateOwner, IDamagable prey) { 
+            this.stateOwner = stateOwner; 
+            this.prey = prey;
+        }
+        
+        public void Enter()
+        {
+            stateOwner.GetInRangeTiles();
+        }
+    
+        public void Execute()
+        {
+            prey.TakeDamage(5);
+            stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
+        }
+        
+        public void Exit()
+        {
+            GameManager.instance.turnSystem.MakeTurn();
+            stateOwner.ClearRange();
+        }
+    } 
     public class InCharge : IState
     {
         Unit stateOwner;
@@ -97,17 +122,14 @@ namespace UnitStates{
                     prey = hit.collider.gameObject.GetComponent<IDamagable>();
                 }
                 
-                if(prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(prey.GetStandingOnTile()))
-                {
-                    prey.TakeDamage(5);
-                    stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
-                }
+                if(prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(prey.GetStandingOnTile()))  
+                    stateOwner.stateMachine.ChangeState(new Attack(stateOwner, prey));
+                
             }
         }
         
         public void Exit()
         {
-            GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
@@ -155,7 +177,7 @@ namespace UnitStates{
         
         public void Enter()
         {
-
+            SelectedView.instance.MoveTo(owner.transform.position);
         }
     
         public void Execute()
@@ -172,11 +194,10 @@ namespace UnitStates{
     
         public void Exit()
         {
-
         }
     }
 }
-public class Unit : MonoBehaviour, IDamagable, IHealable
+public class Unit : MonoBehaviour
 {
     public Player owner;
     public StateMachine stateMachine = new StateMachine();
@@ -186,8 +207,7 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
     public List<TileCube> inRangeTiles { get; private set; }
     [SerializeField]
     private UnitData unitData;
-    private int health;
-    private int maxHealth;
+    public int maxHealth;
     Color startColor;
     private const float MOVEMENT_ANIMATION_SPEED = 10f;
     public void InitValues(int team, Player owner)
@@ -198,16 +218,8 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
     private void Awake()
     {
         maxHealth = unitData.Health;
-        health = maxHealth;
         path = new List<TileCube>();
         inRangeTiles = new List<TileCube>();
-    }
-
-    public int GetPreyTeam(){
-        return this.team;
-    }
-    public TileCube GetStandingOnTile(){
-        return standingOn;
     }
     private void Start()
     {
@@ -233,7 +245,9 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
     {
         stateMachine.Update();
     }
-
+    private void OnDestroy() {
+        owner.units.Remove(this);
+    }
     // Clears range of attack or movement
     public void ClearRange()
     {
@@ -293,20 +307,5 @@ public class Unit : MonoBehaviour, IDamagable, IHealable
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
-    }
-
-    public void TakeDamage(int damage){
-        FindObjectOfType<SoundPlayer>().Play("Damaged");
-        this.health -= damage;
-        if(this.health <= 0)
-            this.stateMachine.ChangeState(new UnitStates.Death(this));
-    }
-    public void Dead()
-    {
-        Destroy(gameObject);
-    }
-    public void TakeHeal(int heal){
-        if (this.health != this.maxHealth)
-            this.health += heal;
     }
 }

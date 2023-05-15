@@ -60,12 +60,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unit1prefab: {fileID: 8906848788069213801, guid: 7848f2251d63be04c89315500863403b, type: 3}
-  unit2: {fileID: 0}
-  unit3: {fileID: 0}
+  unit2prefab: {fileID: 0}
+  unit3prefab: {fileID: 0}
   team: 0
   points: 5000
   unitToPlace: {fileID: 0}
   unitData: {fileID: 11400000, guid: 6244adde17c4bb940ba5fb56aecff51d, type: 2}
+  units: []
   standingOn: {fileID: 0}
 --- !u!1001 &2740609065539443262
 PrefabInstance:
