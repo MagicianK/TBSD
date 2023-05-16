@@ -142,7 +142,15 @@ public class Player : NetworkBehaviour, IDamagable
     [ServerRpc(RequireOwnership = false)]
     public void CreateUnitServerRpc(Vector2Int pos)
     {
-        CreateUnitClientRpc(pos);
+        if (Board.instance.map.ContainsKey(pos))
+        {
+            TileCube tileCube = Board.instance.map[pos];
+            CreateUnit(tileCube);
+        }
+        else
+        {
+            Debug.Log("Position does not exist!");
+        }
     }
 
     [ClientRpc]
