@@ -35,6 +35,8 @@ public class Relay : MonoBehaviour
                 allocation.ConnectionData
                 );
 
+            Debug.Log("Server IP " + allocation.RelayServer.IpV4);
+
             NetworkManager.Singleton.StartHost();
 
             return joinCode;
@@ -64,6 +66,8 @@ public class Relay : MonoBehaviour
                 joinAllocation.ConnectionData,
                 joinAllocation.HostConnectionData
                 );
+
+            Debug.Log("Client IP " + joinAllocation.RelayServer.IpV4);
 
             NetworkManager.Singleton.StartClient();
         }

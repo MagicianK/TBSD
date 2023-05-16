@@ -40,13 +40,11 @@ public class Board : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (!IsServer)
-            return;
-
-        SpawnTilesClientRpc();
+        Debug.Log("Bounds:");
+        SpawnTilesServerRpc();
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void SpawnTilesServerRpc()
     {
         SpawnTilesClientRpc();
@@ -71,15 +69,13 @@ public class Board : NetworkBehaviour
                     if (tileMap.HasTile(tileLocation) && !map.ContainsKey(tilePosition))
                     {
                         var tileCube = Instantiate(tileCubePrefab, groundTilesContainer.transform);
+
                         var cellWorldPosition = tileMap.GetCellCenterWorld(tileLocation);
 
                         tileCube.transform.position = new Vector3(cellWorldPosition.x, cellWorldPosition.y, cellWorldPosition.z);
                         tileCube.GetComponent<MeshRenderer>().sortingOrder = tileMap.GetComponent<TilemapRenderer>().sortingOrder;
                         tileCube.gridLocation = tileLocation;
                         map.Add(tilePosition, tileCube);
-
-                        if (IsServer)
-                            tileCube.NetworkObject.Spawn();
                     }
                 }
             }

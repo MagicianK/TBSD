@@ -79,22 +79,24 @@ public class GameManager : NetworkBehaviour
     {
         turnSystem = new TurnSystem();
         turnSystem.text = text; // Temporary solution
-        if (!IsServer)
-            return;
 
-        StartCoroutine(CreatePlayerBases());
+        if (IsServer)
+            StartCoroutine(CreatePlayerBases());
     }
 
     private void Start()
     {
     }
 
-    private IEnumerator CreatePlayerBases()
+    [ServerRpc(RequireOwnership = false)]
+    private void CreatePlayerBasesServerRpc()
     {
-        while (!Board.instance.isFilled)
-        {
-            yield return null;
-        }
+        CreatePlayerBasesClientRpc();
+    }
+
+    [ClientRpc]
+    private void CreatePlayerBasesClientRpc()
+    {
         Debug.Log("Spawning bases");
         TileCube tc1 = Board.instance.map[new Vector2Int(-6, 1)];
         playerBase0 = Instantiate(playerBasePrefab0);
@@ -103,6 +105,7 @@ public class GameManager : NetworkBehaviour
 
         playerBase0.standingOn = tc1;
         playerBase0.transform.position = tc1.transform.position;
+        playerBase0.location2D.Value = tc1.grid2DLocation;
         playerBase0.team = 0;
         tc1.isBlocked = true;
         tc1.player = playerBase0;
@@ -113,10 +116,24 @@ public class GameManager : NetworkBehaviour
         Debug.Log("Spawned " + playerBase1.NetworkObjectId);
 
         playerBase1.standingOn = tc2;
+        playerBase1.location2D.Value = tc2.grid2DLocation;
         playerBase1.transform.position = tc2.transform.position;
         playerBase1.team = 1;
         tc2.isBlocked = true;
         tc2.player = playerBase1;
+
+        Debug.Log("playerBase0 Standing on " + playerBase0.standingOn.grid2DLocation.ToString());
+        Debug.Log("playerBase1 Standing on " + playerBase1.standingOn.grid2DLocation.ToString());
+    }
+
+    private IEnumerator CreatePlayerBases()
+    {
+        while (!Board.instance.isFilled)
+        {
+            yield return null;
+        }
+
+        CreatePlayerBasesClientRpc();
     }
 
     private void Update()

@@ -100,5 +100,14 @@ public class LobbyUI : MonoBehaviour
     private void Show()
     {
         gameObject.SetActive(true);
+
+        if (LobbyManager.Instance.IsLobbyHost())
+        {
+            startGameButton.enabled = true;
+        }
+        else
+        {
+            startGameButton.enabled = false;
+        }
     }
 }

@@ -74,10 +74,12 @@ namespace UnitStates
             stateOwner.ClearRange();
         }
     }
+
     public class Attack : IState
     {
-        Unit stateOwner;
-        IDamagable prey;
+        private Unit stateOwner;
+        private IDamagable prey;
+
         public Attack(Unit stateOwner, IDamagable prey)
         {
             this.stateOwner = stateOwner;
@@ -101,6 +103,7 @@ namespace UnitStates
             stateOwner.ClearRange();
         }
     }
+
     public class InCharge : IState
     {
         private Unit stateOwner;
@@ -206,6 +209,7 @@ namespace UnitStates
         }
     }
 }
+
 public class Unit : NetworkBehaviour
 {
     public Player owner;
@@ -216,8 +220,9 @@ public class Unit : NetworkBehaviour
     public List<TileCube> inRangeTiles { get; private set; }
     [SerializeField]
     private UnitData unitData;
+
     public int maxHealth;
-    Color startColor;
+    private Color startColor;
     private const float MOVEMENT_ANIMATION_SPEED = 10f;
 
     public void InitValues(int team, Player owner)
@@ -263,10 +268,12 @@ public class Unit : NetworkBehaviour
     {
         stateMachine.Update();
     }
-    private void OnDestroy()
+
+    private void OnNetwrokDestroy()
     {
         owner.units.Remove(this);
     }
+
     // Clears range of attack or movement
     public void ClearRange()
     {
@@ -313,7 +320,8 @@ public class Unit : NetworkBehaviour
                 item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
 
-        inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
+        RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
+        inRangeTiles = tempList;
 
         foreach (var item in inRangeTiles)
         {

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 namespace PlayerBaseStates
 {
@@ -41,13 +42,15 @@ namespace PlayerBaseStates
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
-                List<TileCube> tiles = RangeFinder.GetTilesRange(owner.GetStandingOnTile(), 1);
+                Debug.Log("Checking if owner is null " + owner.location2D.Value);
+                RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
 
                 foreach (var tile in tiles)
                 {
-                    if (!tile.isBlocked)
+                    Debug.Log("Tile " + tile);
+                    if (tile && !tile.isBlocked)
                     {
-                        owner.CreateUnit(tile);
+                        owner.CreateUnitServerRpc(tile.grid2DLocation);
                         break;
                     }
                 }
@@ -75,6 +78,7 @@ public class Player : NetworkBehaviour, IDamagable
     public List<Unit> units;
     private int health;
     public TileCube standingOn;
+    public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
 
     // Start is called before the first frame update
@@ -112,10 +116,12 @@ public class Player : NetworkBehaviour, IDamagable
             }
         }
     }
+
     private void OnDestroy()
     {
         Debug.Log($"Player {this.team - 1}");
     }
+
     public TileCube GetStandingOnTile()
     {
         return standingOn;
@@ -133,10 +139,31 @@ public class Player : NetworkBehaviour, IDamagable
             Destroy(gameObject);
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void CreateUnitServerRpc(Vector2Int pos)
+    {
+        CreateUnitClientRpc(pos);
+    }
+
+    [ClientRpc]
+    public void CreateUnitClientRpc(Vector2Int pos)
+    {
+        if (Board.instance.map.ContainsKey(pos))
+        {
+            TileCube tileCube = Board.instance.map[pos];
+            CreateUnit(tileCube);
+        }
+        else
+        {
+            Debug.Log("Position does not exist!");
+        }
+    }
+
     public void CreateUnit(TileCube tileCube)
     {
         unitToPlace = Instantiate(unit1prefab);
-        unitToPlace.NetworkObject.Spawn();
+        if (IsServer)
+            unitToPlace.NetworkObject.Spawn();
 
         unitToPlace.standingOn = tileCube;
         tileCube.isBlocked = true;
@@ -146,6 +173,7 @@ public class Player : NetworkBehaviour, IDamagable
         units.Add(unitToPlace);
         unitToPlace = null;
     }
+
     private void OnMouseDown()
     {
         // Enables selection state only if Mouse state is Idle and it is their turn
