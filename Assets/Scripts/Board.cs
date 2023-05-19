@@ -74,7 +74,7 @@ public class Board : NetworkBehaviour
 
                         tileCube.transform.position = new Vector3(cellWorldPosition.x, cellWorldPosition.y, cellWorldPosition.z);
                         tileCube.GetComponent<MeshRenderer>().sortingOrder = tileMap.GetComponent<TilemapRenderer>().sortingOrder;
-                        tileCube.gridLocation = tileLocation;
+                        tileCube.gridLocation.Value = tileLocation;
                         map.Add(tilePosition, tileCube);
                     }
                 }
@@ -100,7 +100,7 @@ public class Board : NetworkBehaviour
         List<TileCube> neighbours = new List<TileCube>();
 
         // TOP
-        Vector2Int locationToCheck = new Vector2Int(currentTile.gridLocation.x, currentTile.gridLocation.y + 1);
+        Vector2Int locationToCheck = new Vector2Int(currentTile.gridLocation.Value.x, currentTile.gridLocation.Value.y + 1);
 
         if (map.ContainsKey(locationToCheck))
         {
@@ -108,7 +108,7 @@ public class Board : NetworkBehaviour
         }
 
         // BOTTOM
-        locationToCheck = new Vector2Int(currentTile.gridLocation.x, currentTile.gridLocation.y - 1);
+        locationToCheck = new Vector2Int(currentTile.gridLocation.Value.x, currentTile.gridLocation.Value.y - 1);
 
         if (map.ContainsKey(locationToCheck))
         {
@@ -116,7 +116,7 @@ public class Board : NetworkBehaviour
         }
 
         // RIGHT
-        locationToCheck = new Vector2Int(currentTile.gridLocation.x + 1, currentTile.gridLocation.y);
+        locationToCheck = new Vector2Int(currentTile.gridLocation.Value.x + 1, currentTile.gridLocation.Value.y);
 
         if (map.ContainsKey(locationToCheck))
         {
@@ -124,7 +124,7 @@ public class Board : NetworkBehaviour
         }
 
         // LEFT
-        locationToCheck = new Vector2Int(currentTile.gridLocation.x - 1, currentTile.gridLocation.y);
+        locationToCheck = new Vector2Int(currentTile.gridLocation.Value.x - 1, currentTile.gridLocation.Value.y);
 
         if (map.ContainsKey(locationToCheck))
         {

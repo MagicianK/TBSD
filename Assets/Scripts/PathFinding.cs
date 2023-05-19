@@ -35,7 +35,7 @@ public class PathFinding : MonoBehaviour
                 neighbour.G = GetBlockDistance(start, neighbour);
                 neighbour.H = GetBlockDistance(end, neighbour);
 
-                neighbour.previous = currentTile.grid2DLocation;
+                neighbour.previous.Value = currentTile.grid2DLocation;
 
                 if (!openList.Contains(neighbour))
                 {
@@ -56,7 +56,7 @@ public class PathFinding : MonoBehaviour
         {
             finishedList.Add(currentTile);
             Debug.Log(currentTile.previous);
-            currentTile = Board.instance.map[currentTile.previous];
+            currentTile = Board.instance.map[currentTile.previous.Value];
             counter++;
         }
         finishedList.Reverse();
@@ -65,6 +65,6 @@ public class PathFinding : MonoBehaviour
 
     private static int GetBlockDistance(TileCube start, TileCube neighbour)
     {
-        return Mathf.Abs(start.gridLocation.x - neighbour.gridLocation.x) + Mathf.Abs(start.gridLocation.z - neighbour.gridLocation.z);
+        return Mathf.Abs(start.gridLocation.Value.x - neighbour.gridLocation.Value.x) + Mathf.Abs(start.gridLocation.Value.z - neighbour.gridLocation.Value.z);
     }
 }

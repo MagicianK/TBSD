@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class TileCube : NetworkBehaviour
+public class TileCube : NetworkBehaviour, INetworkSerializable
 {
     public Player player;
     public int G;
@@ -14,11 +14,11 @@ public class TileCube : NetworkBehaviour
     { get { return G + H; } }
 
     public Unit unit;
-    public Vector2Int previous;
-    public Vector3Int gridLocation;
+    public NetworkVariable<Vector2Int> previous = new NetworkVariable<Vector2Int>();
+    public NetworkVariable<Vector3Int> gridLocation = new NetworkVariable<Vector3Int>();
 
     public Vector2Int grid2DLocation
-    { get { return new Vector2Int(gridLocation.x, gridLocation.z); } }
+    { get { return new Vector2Int(gridLocation.Value.x, gridLocation.Value.z); } }
 
     public Material hoverMaterial;
     public Material defaultMaterial;
@@ -47,12 +47,12 @@ public class TileCube : NetworkBehaviour
     // }
     private void OnMouseEnter()
     {
-        if (MouseController.instance)
+        /*if (MouseController.instance)
         {
             Transform trans = MouseController.instance.cursor.transform;
             Vector3 pos = new Vector3(gameObject.transform.position.x, trans.position.y, gameObject.transform.position.z);
             MouseController.instance.cursor.transform.position = pos;
-        }
+        }*/
     }
 
     public void DrawBlue()
@@ -85,5 +85,35 @@ public class TileCube : NetworkBehaviour
     public void ChangeLayer(LayerMask layer)
     {
         gameObject.layer = layer;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        /*
+         public Player player;
+    public int G;
+    public int H;
+    public bool isBlocked;
+
+    public int F
+    { get { return G + H; } }
+
+    public Unit unit;
+    public NetworkVariable<Vector2Int> previous = new NetworkVariable<Vector2Int>();
+    public NetworkVariable<Vector3Int> gridLocation = new NetworkVariable<Vector3Int>();
+
+    public Vector2Int grid2DLocation
+    { get { return new Vector2Int(gridLocation.Value.x, gridLocation.Value.z); } }
+
+    public Material hoverMaterial;
+    public Material defaultMaterial;
+    public Material clickedMaterial;
+    public Material rangeShowMaterial;
+    public Material prevmaterial;
+         */
+
+        serializer.SerializeValue(ref player);
+        serializer.SerializeValue(ref isBlocked);
+        serializer.SerializeValue(ref unit);
     }
 }

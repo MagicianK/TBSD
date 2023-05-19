@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 namespace PlayerBaseStates
 {
@@ -42,8 +41,8 @@ namespace PlayerBaseStates
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
-                Debug.Log("Checking if owner is null " + owner.location2D.Value);
-                RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
+                Debug.Log("Checking if owner is null " + owner.location2D);
+                RangeFinder.GetTilesRangeServerRpc(owner.location2D, 1, out List<TileCube> tiles);
 
                 foreach (var tile in tiles)
                 {
@@ -63,22 +62,25 @@ namespace PlayerBaseStates
     }
 }
 
-public class Player : NetworkBehaviour, IDamagable
+public class Player : NetworkBehaviour, IDamagable, INetworkSerializable
 {
     public Unit unit1prefab;
     public Unit unit2prefab;
     public Unit unit3prefab;
-    public int team;
+    public NetworkVariable<int> team = new NetworkVariable<int>();
     public int points = 5000;
     public StateMachine stateMachine = new StateMachine();
     public Unit unitToPlace;
     [SerializeField]
     private UnitData unitData;
 
+    [SerializeField]
+    public MouseController mouseController;
+
     public List<Unit> units;
     private int health;
     public TileCube standingOn;
-    public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
+    public Vector2Int location2D;
     private Color startColor;
 
     // Start is called before the first frame update
@@ -98,7 +100,7 @@ public class Player : NetworkBehaviour, IDamagable
             return;
         }
 
-        if (GameManager.instance.turnSystem.currentTeam != this.team)
+        if (GameManager.instance.turnSystem.currentTeam.Value != this.team.Value)
         {
             foreach (Unit unit in units)
             {
@@ -117,9 +119,9 @@ public class Player : NetworkBehaviour, IDamagable
         }
     }
 
-    private void OnDestroy()
+    public override void OnNetworkDespawn()
     {
-        Debug.Log($"Player {this.team - 1}");
+        Debug.Log($"Player {this.team.Value - 1}");
     }
 
     public TileCube GetStandingOnTile()
@@ -129,7 +131,7 @@ public class Player : NetworkBehaviour, IDamagable
 
     public int GetPreyTeam()
     {
-        return this.team;
+        return this.team.Value;
     }
 
     public void TakeDamage(int damage)
@@ -176,8 +178,8 @@ public class Player : NetworkBehaviour, IDamagable
         unitToPlace.standingOn = tileCube;
         tileCube.isBlocked = true;
         unitToPlace.transform.position = tileCube.transform.position;
-        unitToPlace.InitValues(this.team, this);
-        MouseController.instance.selectedUnit = unitToPlace;
+        unitToPlace.InitValues(this.team.Value, this);
+        mouseController.selectedUnit = unitToPlace;
         units.Add(unitToPlace);
         unitToPlace = null;
     }
@@ -185,10 +187,10 @@ public class Player : NetworkBehaviour, IDamagable
     private void OnMouseDown()
     {
         // Enables selection state only if Mouse state is Idle and it is their turn
-        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle &&
-            GameManager.instance.turnSystem.currentTeam == this.team)
+        if (mouseController.mouseStateMachine.currentState is MouseStates.Idle &&
+            GameManager.instance.turnSystem.currentTeam.Value == this.team.Value)
         {
-            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(this));
+            mouseController.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(mouseController, this));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }
     }
@@ -201,5 +203,15 @@ public class Player : NetworkBehaviour, IDamagable
     private void OnMouseExit()
     {
         GetComponentInChildren<Renderer>().material.color = startColor;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref points);
+        serializer.SerializeValue(ref unitToPlace);
+        serializer.SerializeValue(ref unitData);
+        serializer.SerializeValue(ref mouseController);
+        serializer.SerializeValue(ref standingOn);
+        serializer.SerializeValue(ref location2D);
     }
 }

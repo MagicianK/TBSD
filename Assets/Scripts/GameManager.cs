@@ -46,7 +46,7 @@ public class StateMachine
     }
 }
 
-public class GameManager : NetworkBehaviour
+public class GameManager : NetworkBehaviour, INetworkSerializable
 {
     [SerializeField]
     private Player playerBasePrefab0;
@@ -54,11 +54,12 @@ public class GameManager : NetworkBehaviour
     [SerializeField]
     private Player playerBasePrefab1;
 
-    private Player playerBase0;
-    private Player playerBase1;
+    public Player playerBase0;
+    public Player playerBase1;
     public TurnSystem turnSystem;
     public Text text;
     private static GameManager _instance;
+    public NetworkVariable<bool> isPlayerBasesCreated = new NetworkVariable<bool>();
 
     public static GameManager instance
     { get { return _instance; } }
@@ -72,6 +73,7 @@ public class GameManager : NetworkBehaviour
         else
         {
             _instance = this;
+            isPlayerBasesCreated.Value = false;
         }
     }
 
@@ -101,29 +103,26 @@ public class GameManager : NetworkBehaviour
         TileCube tc1 = Board.instance.map[new Vector2Int(-6, 1)];
         playerBase0 = Instantiate(playerBasePrefab0);
         playerBase0.NetworkObject.Spawn();
-        Debug.Log("Spawned " + playerBase0.NetworkObjectId);
 
         playerBase0.standingOn = tc1;
         playerBase0.transform.position = tc1.transform.position;
-        playerBase0.location2D.Value = tc1.grid2DLocation;
-        playerBase0.team = 0;
+        playerBase0.location2D = tc1.grid2DLocation;
+        playerBase0.team.Value = Random.Range(10, 100);
         tc1.isBlocked = true;
         tc1.player = playerBase0;
 
         TileCube tc2 = Board.instance.map[new Vector2Int(25, 1)];
         playerBase1 = Instantiate(playerBasePrefab1);
         playerBase1.NetworkObject.Spawn();
-        Debug.Log("Spawned " + playerBase1.NetworkObjectId);
 
         playerBase1.standingOn = tc2;
-        playerBase1.location2D.Value = tc2.grid2DLocation;
+        playerBase1.location2D = tc2.grid2DLocation;
         playerBase1.transform.position = tc2.transform.position;
-        playerBase1.team = 1;
+        playerBase1.team.Value = Random.Range(10, 100);
         tc2.isBlocked = true;
         tc2.player = playerBase1;
 
-        Debug.Log("playerBase0 Standing on " + playerBase0.standingOn.grid2DLocation.ToString());
-        Debug.Log("playerBase1 Standing on " + playerBase1.standingOn.grid2DLocation.ToString());
+        isPlayerBasesCreated.Value = true;
     }
 
     private IEnumerator CreatePlayerBases()
@@ -138,5 +137,11 @@ public class GameManager : NetworkBehaviour
 
     private void Update()
     {
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref playerBase0);
+        serializer.SerializeValue(ref playerBase1);
     }
 }

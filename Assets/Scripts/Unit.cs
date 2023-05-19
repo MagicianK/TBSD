@@ -1,3 +1,4 @@
+using MouseStates;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -140,24 +141,24 @@ namespace UnitStates
         }
     }
 
-    public class PrepareToMove : IState
+    public class PrepareToMove : IMouseState
     {
         private Unit stateOwner;
 
-        public PrepareToMove(Unit stateOwner)
+        public PrepareToMove(MouseController controller, Unit stateOwner) : base(controller)
         { this.stateOwner = stateOwner; }
 
-        public void Enter()
+        public override void Enter()
         {
             stateOwner.GetInRangeTiles();
             Debug.Log("Prepare to move");
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (Input.GetMouseButtonUp(0))
             {
-                var focusedHit = MouseController.instance.GetFocusedTile();
+                var focusedHit = controller.GetFocusedTile();
                 if (focusedHit.HasValue)
                 {
                     TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
@@ -175,7 +176,7 @@ namespace UnitStates
             }
         }
 
-        public void Exit()
+        public override void Exit()
         {
         }
     }
@@ -196,7 +197,7 @@ namespace UnitStates
         {
             if (Input.GetKeyDown(KeyCode.M))
             {
-                owner.stateMachine.ChangeState(new PrepareToMove(owner));
+                owner.stateMachine.ChangeState(new PrepareToMove(owner.mouseController, owner));
             }
             else if (Input.GetKeyDown(KeyCode.A))
             {
@@ -210,16 +211,18 @@ namespace UnitStates
     }
 }
 
-public class Unit : NetworkBehaviour
+public class Unit : NetworkBehaviour, INetworkSerializable
 {
     public Player owner;
     public StateMachine stateMachine = new StateMachine();
     public int team;
-    public TileCube standingOn { get; set; }
+    public TileCube standingOn;
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
     [SerializeField]
     private UnitData unitData;
+
+    public MouseController mouseController;
 
     public int maxHealth;
     private Color startColor;
@@ -245,6 +248,11 @@ public class Unit : NetworkBehaviour
 
     private void OnMouseDown()
     {
+        if (IsOwner)
+        {
+            Debug.Log("Clicked by owner");
+        }
+        /*
         // If mouse is in Idle state unit can be selected
         if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
         {
@@ -252,6 +260,7 @@ public class Unit : NetworkBehaviour
             MouseController.instance.selectedUnit = this;
             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
         }
+        */
     }
 
     private void OnMouseEnter()
@@ -269,9 +278,10 @@ public class Unit : NetworkBehaviour
         stateMachine.Update();
     }
 
-    private void OnNetwrokDestroy()
+    public override void OnNetworkDespawn()
     {
-        owner.units.Remove(this);
+        if (IsServer)
+            owner.units.Remove(this);
     }
 
     // Clears range of attack or movement
@@ -335,5 +345,16 @@ public class Unit : NetworkBehaviour
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref owner);
+        serializer.SerializeValue(ref team);
+        serializer.SerializeValue(ref standingOn);
+        serializer.SerializeValue(ref unitData);
+        serializer.SerializeValue(ref mouseController);
+        serializer.SerializeValue(ref maxHealth);
+        serializer.SerializeValue(ref startColor);
     }
 }

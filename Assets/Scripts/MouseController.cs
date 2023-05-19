@@ -6,6 +6,28 @@ using UnityEngine;
 
 namespace MouseStates
 {
+    public abstract class IMouseState : IState
+    {
+        public MouseController controller;
+
+        public IMouseState(MouseController controller)
+        {
+            this.controller = controller;
+        }
+
+        public virtual void Enter()
+        {
+        }
+
+        public virtual void Execute()
+        {
+        }
+
+        public virtual void Exit()
+        {
+        }
+    }
+
     public class Idle : IState
     {
         public void Enter()
@@ -26,49 +48,53 @@ namespace MouseStates
         }
     }
 
-    public class OnPlayerBaseState : IState
+    public class OnPlayerBaseState : IMouseState
     {
         private Player playerBase;
 
-        public OnPlayerBaseState(Player playerBase)
+        public OnPlayerBaseState(MouseController controller, Player playerBase) : base(controller)
         {
             this.playerBase = playerBase;
         }
 
-        public void Enter()
+        public override void Enter()
         {
         }
 
-        public void Execute()
+        public override void Execute()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
-                MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
+                controller.mouseStateMachine.ChangeState(new MouseStates.Idle());
         }
 
-        public void Exit()
+        public override void Exit()
         {
             playerBase.stateMachine.ChangeState(new PlayerBaseStates.Idle(playerBase));
         }
     }
 
-    public class OnUnitState : IState
+    public class OnUnitState : IMouseState
     {
-        public void Enter()
+        public OnUnitState(MouseController controller) : base(controller)
         {
         }
 
-        public void Execute()
+        public override void Enter()
+        {
+        }
+
+        public override void Execute()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
-                MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
+                controller.mouseStateMachine.ChangeState(new MouseStates.Idle());
         }
 
-        public void Exit()
+        public override void Exit()
         {
-            Unit selectedUnit = MouseController.instance.selectedUnit;
+            Unit selectedUnit = controller.selectedUnit;
             selectedUnit.stateMachine.ChangeState(new UnitStates.Idle(selectedUnit));
             selectedUnit.ClearRange();
-            MouseController.instance.selectedUnit = null;
+            controller.selectedUnit = null;
         }
     }
 
@@ -104,16 +130,11 @@ namespace MouseStates
     // }
 }
 
-public class MouseController : NetworkBehaviour
+public class MouseController : NetworkBehaviour, INetworkSerializable
 {
     // Change state of the mouse in UPDATE()
     // Handle changes in UPDATE()
     public StateMachine mouseStateMachine = new StateMachine();
-
-    private static MouseController _instance;
-
-    public static MouseController instance
-    { get { return _instance; } }
 
     public GameObject cursor;
     public Unit selectedUnit;
@@ -124,24 +145,51 @@ public class MouseController : NetworkBehaviour
 
     private void Awake()
     {
-        if (_instance != null && _instance != this)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            _instance = this;
-        }
     }
 
     public override void OnNetworkSpawn()
     {
+        if (!IsOwner) return;
+
+        mouseStateMachine.ChangeState(new MouseStates.Idle());
+
+        StartCoroutine(AssignPlayers());
+    }
+
+    private IEnumerator AssignPlayers()
+    {
+        while (!GameManager.instance.isPlayerBasesCreated.Value)
+        {
+            yield return null;
+        }
+        AssignPlayersServerRpc();
+    }
+
+    [ServerRpc]
+    public void AssignPlayersServerRpc()
+    {
+        AssignPlayersClientRpc();
+    }
+
+    [ClientRpc]
+    public void AssignPlayersClientRpc()
+    {
+        Debug.Log("Assigning Players");
+        if (IsHost)
+        {
+            Debug.Log("Assigned Host");
+            GameManager.instance.playerBase0.mouseController = this;
+        }
+        else
+        {
+            Debug.Log("Assigning Client");
+            GameManager.instance.playerBase1.mouseController = this;
+        }
     }
 
     // Start is called before the first frame update
     private void Start()
     {
-        mouseStateMachine.ChangeState(new MouseStates.Idle());
     }
 
     private void LateUpdate()
@@ -195,5 +243,9 @@ public class MouseController : NetworkBehaviour
             return hit;
         }
         return null;
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
     }
 }

@@ -1,24 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New UnitData", menuName = "Unit Data", order = 51)]
-public class UnitData : ScriptableObject
+public class UnitData : ScriptableObject, INetworkSerializable
 {
     [SerializeField]
     private string unitName;
+
     [SerializeField]
     private string description;
+
     [SerializeField]
     private Sprite icon;
+
     [SerializeField]
     private int goldCost;
+
     [SerializeField]
     private int movementRange;
+
     [SerializeField]
     private int health;
 
-        public string UnitName
+    public string UnitName
     {
         get
         {
@@ -49,6 +55,7 @@ public class UnitData : ScriptableObject
             return goldCost;
         }
     }
+
     public int MovementRange
     {
         get
@@ -56,11 +63,21 @@ public class UnitData : ScriptableObject
             return movementRange;
         }
     }
+
     public int Health
     {
         get
         {
             return health;
         }
+    }
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref unitName);
+        serializer.SerializeValue(ref description);
+        serializer.SerializeValue(ref goldCost);
+        serializer.SerializeValue(ref movementRange);
+        serializer.SerializeValue(ref health);
     }
 }
