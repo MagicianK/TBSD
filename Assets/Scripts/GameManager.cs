@@ -93,7 +93,6 @@ public class GameManager : NetworkBehaviour, INetworkSerializable
     [ServerRpc(RequireOwnership = false)]
     private void CreatePlayerBasesServerRpc()
     {
-        CreatePlayerBasesClientRpc();
     }
 
     [ClientRpc]
@@ -107,7 +106,7 @@ public class GameManager : NetworkBehaviour, INetworkSerializable
         playerBase0.standingOn = tc1;
         playerBase0.transform.position = tc1.transform.position;
         playerBase0.location2D = tc1.grid2DLocation;
-        playerBase0.team.Value = Random.Range(10, 100);
+        playerBase0.team.Value = 0;
         tc1.isBlocked = true;
         tc1.player = playerBase0;
 
@@ -118,7 +117,7 @@ public class GameManager : NetworkBehaviour, INetworkSerializable
         playerBase1.standingOn = tc2;
         playerBase1.location2D = tc2.grid2DLocation;
         playerBase1.transform.position = tc2.transform.position;
-        playerBase1.team.Value = Random.Range(10, 100);
+        playerBase0.team.Value = 1;
         tc2.isBlocked = true;
         tc2.player = playerBase1;
 

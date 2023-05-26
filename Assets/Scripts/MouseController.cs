@@ -142,6 +142,7 @@ public class MouseController : NetworkBehaviour, INetworkSerializable
     public Unit unitToPlace;
     private TileCube clickedTile;
     public Unit clickedUnit;
+    public NetworkVariable<int> team = new NetworkVariable<int>();
 
     private void Awake()
     {
@@ -152,8 +153,6 @@ public class MouseController : NetworkBehaviour, INetworkSerializable
         if (!IsOwner) return;
 
         mouseStateMachine.ChangeState(new MouseStates.Idle());
-
-        StartCoroutine(AssignPlayers());
     }
 
     private IEnumerator AssignPlayers()
