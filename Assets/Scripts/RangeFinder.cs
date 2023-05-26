@@ -45,7 +45,7 @@ public class RangeFinder
             {
                 //Debug.Log("Item " + item.grid2DLocation);
                 if (item)
-                    surroundingTiles.AddRange(Board.instance.GetNeighbourTiles(item));
+                    surroundingTiles.AddRange(BoardManager.instance.GetNeighbourTiles(item));
             }
             inRangeTiles.AddRange(surroundingTiles);
             tileForPreviousStep = surroundingTiles.Distinct().ToList();

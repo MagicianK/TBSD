@@ -5,35 +5,44 @@ using UnityEngine;
 
 public class TileCube : NetworkBehaviour
 {
-    public PlayerBase player;
+    //public PlayerBase player;
     public int G;
     public int H;
-    public bool isBlocked;
-
+    //public bool isBlocked;
+    public NetworkVariable<bool> isBlocked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<Vector2Int> coord = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     public int F
     { get { return G + H; } }
 
-    public Unit unit;
+    //public Unit unit;
     public Vector2Int previous;
     public Vector3Int gridLocation;
 
-    public Vector2Int grid2DLocation
-    { get { return new Vector2Int(gridLocation.x, gridLocation.z); } }
+    //public Vector2Int grid2DLocation
+    //{ get { return new Vector2Int(gridLocation.x, gridLocation.z); } }
 
+    
     public Material hoverMaterial;
     public Material defaultMaterial;
     public Material clickedMaterial;
     public Material rangeShowMaterial;
     public Material prevmaterial;
+    public Material darkDefaultMaterial;
     MouseController mouseController;
     // Start is called before the first frame update
-    public string GetUnitInfo()
+    //public string GetUnitInfo()
+    //{
+    //    if (unit != null)
+    //        return unit.ToString();
+    //    return "empty";
+    //}
+    
+    [ServerRpc]
+    public void InitServerRpc(bool isOffset, Vector2Int coord)
     {
-        if (unit != null)
-            return unit.ToString();
-        return "empty";
+        this.coord.Value = coord;
+        gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
     }
-
     private void Start()
     {
         mouseController = NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>();
@@ -69,10 +78,10 @@ public class TileCube : NetworkBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (unit != null)
-        {
-            isBlocked = true;
-        }
+        //if (unit != null)
+        //{
+        //    isBlocked = true;
+        //}
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))
         {
             DrawDefault();

@@ -6,7 +6,7 @@ using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance { get; private set; }
@@ -346,8 +346,8 @@ public class LobbyManager : MonoBehaviour
             try
             {
                 Debug.Log("Start Game");
+                SceneManager.LoadScene("GameScene");
                 string relayCode = await Relay.Instance.CreateRelay();
-
                 Lobby lobby = await Lobbies.Instance.UpdateLobbyAsync(joinedLobby.Id, new UpdateLobbyOptions
                 {
                     Data = new Dictionary<string, DataObject>

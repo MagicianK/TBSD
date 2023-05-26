@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class PathFinder : MonoBehaviour
 {
+
     public List<TileCube> FindPath(TileCube start, TileCube end)
     {
         List<TileCube> openList = new List<TileCube>();
@@ -23,11 +24,11 @@ public class PathFinder : MonoBehaviour
                 return GetFinishedList(start, end);
             }
 
-            var neighbourTiles = Board.instance.GetNeighbourTiles(currentTile);
+            var neighbourTiles = BoardManager.instance.GetNeighbourTiles(currentTile);
 
             foreach (var neighbour in neighbourTiles)
             {
-                if (neighbour.isBlocked ||
+                if (neighbour.isBlocked.Value ||
                 closedList.Contains(neighbour))
                 {
                     continue;
@@ -35,7 +36,7 @@ public class PathFinder : MonoBehaviour
                 neighbour.G = GetBlockDistance(start, neighbour);
                 neighbour.H = GetBlockDistance(end, neighbour);
 
-                neighbour.previous = currentTile.grid2DLocation;
+                neighbour.previous = currentTile.coord.Value;
 
                 if (!openList.Contains(neighbour))
                 {
@@ -56,7 +57,7 @@ public class PathFinder : MonoBehaviour
         {
             finishedList.Add(currentTile);
             Debug.Log(currentTile.previous);
-            currentTile = Board.instance.map[currentTile.previous];
+            currentTile = BoardManager.instance.GetTileAtPosition(currentTile.previous);
             counter++;
         }
         finishedList.Reverse();
@@ -65,6 +66,6 @@ public class PathFinder : MonoBehaviour
 
     private int GetBlockDistance(TileCube start, TileCube neighbour)
     {
-        return Mathf.Abs(start.gridLocation.x - neighbour.gridLocation.x) + Mathf.Abs(start.gridLocation.z - neighbour.gridLocation.z);
+        return Mathf.Abs(start.coord.Value.x - neighbour.coord.Value.x) + Mathf.Abs(start.coord.Value.y - neighbour.coord.Value.y);
     }
 }

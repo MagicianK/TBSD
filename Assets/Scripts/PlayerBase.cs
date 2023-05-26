@@ -48,9 +48,9 @@ namespace PlayerBaseStates
                 foreach (var tile in tiles)
                 {
                     Debug.Log("Tile " + tile);
-                    if (tile && !tile.isBlocked)
+                    if (tile && !tile.isBlocked.Value)
                     {
-                        stateOwner.CreateUnitServerRpc(tile.grid2DLocation);
+                        stateOwner.CreateUnitServerRpc(tile.coord.Value);
                         break;
                     }
                 }
@@ -146,9 +146,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable
     [ServerRpc(RequireOwnership = false)]
     public void CreateUnitServerRpc(Vector2Int pos)
     {
-        if (Board.instance.map.ContainsKey(pos))
+        if (BoardManager.instance.GetTileAtPosition(pos))
         {
-            TileCube tileCube = Board.instance.map[pos];
+            TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
             CreateUnit(tileCube);
         }
         else
@@ -160,9 +160,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable
     [ClientRpc]
     public void CreateUnitClientRpc(Vector2Int pos)
     {
-        if (Board.instance.map.ContainsKey(pos))
+        if (BoardManager.instance.GetTileAtPosition(pos))
         {
-            TileCube tileCube = Board.instance.map[pos];
+            TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
             CreateUnit(tileCube);
         }
         else
@@ -178,7 +178,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable
             unitToPlace.NetworkObject.Spawn();
 
         unitToPlace.standingOn = tileCube;
-        tileCube.isBlocked = true;
+        BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
         unitToPlace.transform.position = tileCube.transform.position;
         unitToPlace.InitValues(this.team, this, mouseController);
         mouseController.selectedUnit = unitToPlace;

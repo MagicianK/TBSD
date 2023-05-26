@@ -179,7 +179,7 @@ public class MouseController : NetworkBehaviour
     }
     public IEnumerator WaitAndCreate(BaseFactory.CreateBaseXRpc createBaseXRpc, NetworkBehaviourReference nbr)
     {
-        while (!Board.instance.isFilled)
+        while (!BoardManager.instance.isFilled)
         {
             yield return null;
         }

@@ -58,8 +58,9 @@ namespace UnitStates
 
         public void Enter()
         {
-            stateOwner.standingOn.unit = null;
-            stateOwner.standingOn.isBlocked = false;
+            //stateOwner.standingOn.unit = null;
+            BoardManager.instance.BlockTileServerRpc(stateOwner.standingOn.coord.Value);
+            //stateOwner.standingOn.isBlocked = false;
         }
 
         public void Execute()
@@ -168,7 +169,7 @@ namespace UnitStates
 
         private void CanIgoThere(TileCube tc)
         {
-            if (stateOwner.inRangeTiles.Contains(tc) && !tc.isBlocked)
+            if (stateOwner.inRangeTiles.Contains(tc) && !tc.isBlocked.Value)
             {
                 List<TileCube> path = new List<TileCube>();
                 stateOwner.FindPath(tc, ref path);
@@ -318,7 +319,8 @@ public class Unit : NetworkBehaviour
         if (path.Count == 1)
         {
             standingOn = path[0];
-            standingOn.unit = this;
+            //standingOn.unit = this;
+            BoardManager.instance.BlockTileServerRpc(standingOn.coord.Value);
         }
         if (path.Count == 0)
         {
