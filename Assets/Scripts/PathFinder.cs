@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class PathFinding : MonoBehaviour
+public class PathFinder : MonoBehaviour
 {
-    public static List<TileCube> FindPath(TileCube start, TileCube end)
+    public List<TileCube> FindPath(TileCube start, TileCube end)
     {
         List<TileCube> openList = new List<TileCube>();
         List<TileCube> closedList = new List<TileCube>();
@@ -46,7 +46,7 @@ public class PathFinding : MonoBehaviour
         return new List<TileCube>();
     }
 
-    private static List<TileCube> GetFinishedList(TileCube start, TileCube end)
+    private List<TileCube> GetFinishedList(TileCube start, TileCube end)
     {
         List<TileCube> finishedList = new List<TileCube>();
 
@@ -63,7 +63,7 @@ public class PathFinding : MonoBehaviour
         return finishedList;
     }
 
-    private static int GetBlockDistance(TileCube start, TileCube neighbour)
+    private int GetBlockDistance(TileCube start, TileCube neighbour)
     {
         return Mathf.Abs(start.gridLocation.x - neighbour.gridLocation.x) + Mathf.Abs(start.gridLocation.z - neighbour.gridLocation.z);
     }

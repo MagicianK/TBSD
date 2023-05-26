@@ -17,7 +17,7 @@ public class Board : NetworkBehaviour
     public GameObject groundTilesContainer;
     //[SerializeField] private Tilemap tilemap;
     private Vector2Int currentHover;
-
+    public MouseController mouseController;
     public bool isFilled = false;
     public Dictionary<Vector2Int, TileCube> map;
 
@@ -97,6 +97,8 @@ public class Board : NetworkBehaviour
     // Just returns neighbour tiles alongside to the selected tile
     public List<TileCube> GetNeighbourTiles(TileCube currentTile)
     {
+        //if (!NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+        //    return new List<TileCube>();
         List<TileCube> neighbours = new List<TileCube>();
 
         // TOP

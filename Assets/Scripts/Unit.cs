@@ -70,7 +70,7 @@ namespace UnitStates
         public void Exit()
         {
             Debug.Log("Stopped moving");
-            GameManager.instance.turnSystem.MakeTurn();
+            //GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
@@ -99,7 +99,7 @@ namespace UnitStates
 
         public void Exit()
         {
-            GameManager.instance.turnSystem.MakeTurn();
+            //GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
@@ -157,7 +157,7 @@ namespace UnitStates
         {
             if (Input.GetMouseButtonUp(0))
             {
-                var focusedHit = MouseController.instance.GetFocusedTile();
+                var focusedHit = stateOwner.mouseController.GetFocusedTile();
                 if (focusedHit.HasValue)
                 {
                     TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
@@ -170,7 +170,9 @@ namespace UnitStates
         {
             if (stateOwner.inRangeTiles.Contains(tc) && !tc.isBlocked)
             {
-                stateOwner.path = PathFinding.FindPath(stateOwner.standingOn, tc);
+                List<TileCube> path = new List<TileCube>();
+                stateOwner.FindPath(tc, ref path);
+                stateOwner.path = path;
                 stateOwner.stateMachine.ChangeState(new Moving(stateOwner));
             }
         }
@@ -212,45 +214,59 @@ namespace UnitStates
 
 public class Unit : NetworkBehaviour
 {
-    public Player owner;
+    public PlayerBase owner;
     public StateMachine stateMachine = new StateMachine();
     public int team;
     public TileCube standingOn { get; set; }
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
+    public RangeFinder rangeFinder = new RangeFinder();
+    public PathFinder pathFinder;
     [SerializeField]
     private UnitData unitData;
-
+    public MouseController mouseController;
     public int maxHealth;
     private Color startColor;
     private const float MOVEMENT_ANIMATION_SPEED = 10f;
 
-    public void InitValues(int team, Player owner)
+    public void InitValues(int team, PlayerBase owner, MouseController mouseController)
     {
         this.team = team;
         this.owner = owner;
+        this.mouseController = mouseController;
     }
 
     private void Awake()
     {
-        maxHealth = unitData.Health;
-        path = new List<TileCube>();
-        inRangeTiles = new List<TileCube>();
+        
     }
 
     private void Start()
     {
+        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+            return;
+        pathFinder = new PathFinder();
+        path = new List<TileCube>();
         startColor = GetComponentInChildren<Renderer>().material.color;
+        maxHealth = unitData.Health;
+        inRangeTiles = new List<TileCube>();
     }
-
+    public void FindPath(TileCube tc, ref List<TileCube> path)
+    {
+        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+            return;
+        path = pathFinder.FindPath(standingOn, tc);
+    }
     private void OnMouseDown()
     {
+        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+            return;
         // If mouse is in Idle state unit can be selected
-        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle)
+        if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
         {
             stateMachine.ChangeState(new UnitStates.Selected(this));
-            MouseController.instance.selectedUnit = this;
-            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
+            mouseController.selectedUnit = this;
+            mouseController.mouseStateMachine.ChangeState(new MouseStates.OnUnitState(mouseController));
         }
     }
 
@@ -286,6 +302,8 @@ public class Unit : NetworkBehaviour
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
+        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+            return;
         var step = MOVEMENT_ANIMATION_SPEED * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
@@ -320,9 +338,10 @@ public class Unit : NetworkBehaviour
                 item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
 
-        RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
-        inRangeTiles = tempList;
-
+        //RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
+        //inRangeTiles = tempList;
+        inRangeTiles = rangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
+        //inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
         foreach (var item in inRangeTiles)
         {
             if (item.gameObject.layer != LayerMask.NameToLayer("Hover"))

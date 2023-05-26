@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 9076283886530115675}
   - component: {fileID: 9076283886530115674}
   - component: {fileID: -8709874927571279007}
+  - component: {fileID: 2522567366105364324}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: NetworkPlayer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -46,7 +47,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cursor: {fileID: 7323131982441479787, guid: 6a0255073d7fff6418dac388c80acc11, type: 3}
+  selectedUnit: {fileID: 0}
   unitPrefab: {fileID: 4797079833479046658, guid: 5db438f00202c544a895cf96f7b1ebc0, type: 3}
+  unitToPlace: {fileID: 0}
+  clickedUnit: {fileID: 0}
+  team: 0
+  baseFactory: {fileID: 0}
 --- !u!114 &-8709874927571279007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,3 +69,19 @@ MonoBehaviour:
   AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
   AutoObjectParentSync: 1
+--- !u!114 &2522567366105364324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9076283886530115673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0675820f82eab4a955ce8ea96b49d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerBasePrefab0: {fileID: 1572173122244300541, guid: 3b2e3dbac749a3541833f2c8eae45fff, type: 3}
+  playerBasePrefab1: {fileID: 71795539340236867, guid: 21fae8f7cd7264a44bf728ba1db81a96, type: 3}
+  playerBase0: {fileID: 0}
+  playerBase1: {fileID: 0}

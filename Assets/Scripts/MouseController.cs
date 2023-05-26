@@ -8,6 +8,11 @@ namespace MouseStates
 {
     public class Idle : IState
     {
+        MouseController stateOwner;
+        public Idle(MouseController owner)
+        {
+            stateOwner = owner;
+        }
         public void Enter()
         {
             SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
@@ -28,11 +33,10 @@ namespace MouseStates
 
     public class OnPlayerBaseState : IState
     {
-        private Player playerBase;
-
-        public OnPlayerBaseState(Player playerBase)
+        MouseController stateOwner;
+        public OnPlayerBaseState(MouseController owner)
         {
-            this.playerBase = playerBase;
+            stateOwner = owner;
         }
 
         public void Enter()
@@ -42,17 +46,21 @@ namespace MouseStates
         public void Execute()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
-                MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
+                stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
         }
 
         public void Exit()
         {
-            playerBase.stateMachine.ChangeState(new PlayerBaseStates.Idle(playerBase));
         }
     }
 
     public class OnUnitState : IState
     {
+        MouseController stateOwner;
+        public OnUnitState(MouseController owner)
+        {
+            stateOwner = owner;
+        }
         public void Enter()
         {
         }
@@ -60,15 +68,15 @@ namespace MouseStates
         public void Execute()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
-                MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle());
+                stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
         }
 
         public void Exit()
         {
-            Unit selectedUnit = MouseController.instance.selectedUnit;
+            Unit selectedUnit = stateOwner.selectedUnit;
             selectedUnit.stateMachine.ChangeState(new UnitStates.Idle(selectedUnit));
             selectedUnit.ClearRange();
-            MouseController.instance.selectedUnit = null;
+            stateOwner.selectedUnit = null;
         }
     }
 
@@ -110,10 +118,10 @@ public class MouseController : NetworkBehaviour
     // Handle changes in UPDATE()
     public StateMachine mouseStateMachine = new StateMachine();
 
-    private static MouseController _instance;
+    //private static MouseController _instance;
 
-    public static MouseController instance
-    { get { return _instance; } }
+    //public static MouseController instance
+    //{ get { return _instance; } }
 
     public GameObject cursor;
     public Unit selectedUnit;
@@ -121,27 +129,61 @@ public class MouseController : NetworkBehaviour
     public Unit unitToPlace;
     private TileCube clickedTile;
     public Unit clickedUnit;
-
-    private void Awake()
-    {
-        if (_instance != null && _instance != this)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            _instance = this;
-        }
-    }
+    public int team;
+    public BaseFactory baseFactory;
+    
+    //private void Awake()
+    //{
+    //    if (_instance != null && _instance != this)
+    //    {
+    //        Destroy(this.gameObject);
+    //    }
+    //    else
+    //    {
+    //        _instance = this;
+    //    }
+    //}
 
     public override void OnNetworkSpawn()
     {
+        if (!IsOwner)
+            return;
+        baseFactory = GetComponent<BaseFactory>();
+        if (IsHost)
+        {
+            this.team = 0;
+            StartCoroutine(WaitAndCreate(baseFactory.CreateFirstBaseClientRpc, this));
+            //StartCoroutine(WaitAndCreateLocally(baseFactory.CreateFirstBase, this));
+        }
+        else if (IsClient && !IsHost)
+        {
+            this.team = 1;
+            StartCoroutine(WaitAndCreate(baseFactory.CreateSecondBaseServerRpc, this));
+            StartCoroutine(WaitAndCreateLocally(baseFactory.CreateSecondBase, this));
+        }
     }
-
-    // Start is called before the first frame update
     private void Start()
     {
-        mouseStateMachine.ChangeState(new MouseStates.Idle());
+        if (!IsOwner)
+            return;
+
+        mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+    }
+    public IEnumerator WaitAndCreateLocally(BaseFactory.CreateBaseX createBaseX, MouseController mc)
+    {
+        while (!Board.instance.isFilled)
+        {
+            yield return null;
+        }
+        createBaseX(mc);
+    }
+    public IEnumerator WaitAndCreate(BaseFactory.CreateBaseXRpc createBaseXRpc, NetworkBehaviourReference nbr)
+    {
+        while (!Board.instance.isFilled)
+        {
+            yield return null;
+        }
+        createBaseXRpc(nbr);
     }
 
     private void LateUpdate()
@@ -196,4 +238,5 @@ public class MouseController : NetworkBehaviour
         }
         return null;
     }
+
 }

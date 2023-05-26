@@ -8,9 +8,9 @@ namespace PlayerBaseStates
 {
     public class Idle : IState
     {
-        private Player owner;
+        private PlayerBase owner;
 
-        public Idle(Player owner)
+        public Idle(PlayerBase owner)
         { this.owner = owner; }
 
         public void Enter()
@@ -28,10 +28,9 @@ namespace PlayerBaseStates
 
     public class Selected : IState
     {
-        private Player owner;
-
-        public Selected(Player owner)
-        { this.owner = owner; }
+        private PlayerBase stateOwner;
+        public Selected(PlayerBase owner)
+        { this.stateOwner = owner; }
 
         public void Enter()
         {
@@ -42,15 +41,16 @@ namespace PlayerBaseStates
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
-                Debug.Log("Checking if owner is null " + owner.location2D.Value);
-                RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
+                //Debug.Log("Checking if owner is null " + stateOwner.location2D.Value);
+                //RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
+                List<TileCube> tiles = stateOwner.rangeFinder.GetTilesRange(stateOwner.standingOn, 1);
 
                 foreach (var tile in tiles)
                 {
                     Debug.Log("Tile " + tile);
                     if (tile && !tile.isBlocked)
                     {
-                        owner.CreateUnitServerRpc(tile.grid2DLocation);
+                        stateOwner.CreateUnitServerRpc(tile.grid2DLocation);
                         break;
                     }
                 }
@@ -63,7 +63,7 @@ namespace PlayerBaseStates
     }
 }
 
-public class Player : NetworkBehaviour, IDamagable
+public class PlayerBase : NetworkBehaviour, IDamagable
 {
     public Unit unit1prefab;
     public Unit unit2prefab;
@@ -74,13 +74,15 @@ public class Player : NetworkBehaviour, IDamagable
     public Unit unitToPlace;
     [SerializeField]
     private UnitData unitData;
-
+    public MouseController mouseController;
     public List<Unit> units;
     private int health;
     public TileCube standingOn;
+    public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
 
+    
     // Start is called before the first frame update
     private void Start()
     {
@@ -88,17 +90,19 @@ public class Player : NetworkBehaviour, IDamagable
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
+        mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
     }
 
     private void Update()
     {
         stateMachine.Update();
-        if (GameManager.instance.turnSystem == null)
-        {
-            return;
-        }
+        //if (GameManager.instance.turnSystem == null)
+        //{
+        //    return;
+        //}
 
-        if (GameManager.instance.turnSystem.currentTeam != this.team)
+        // TODO: Turn Manager 
+        if (false)
         {
             foreach (Unit unit in units)
             {
@@ -176,8 +180,8 @@ public class Player : NetworkBehaviour, IDamagable
         unitToPlace.standingOn = tileCube;
         tileCube.isBlocked = true;
         unitToPlace.transform.position = tileCube.transform.position;
-        unitToPlace.InitValues(this.team, this);
-        MouseController.instance.selectedUnit = unitToPlace;
+        unitToPlace.InitValues(this.team, this, mouseController);
+        mouseController.selectedUnit = unitToPlace;
         units.Add(unitToPlace);
         unitToPlace = null;
     }
@@ -185,10 +189,10 @@ public class Player : NetworkBehaviour, IDamagable
     private void OnMouseDown()
     {
         // Enables selection state only if Mouse state is Idle and it is their turn
-        if (MouseController.instance.mouseStateMachine.currentState is MouseStates.Idle &&
-            GameManager.instance.turnSystem.currentTeam == this.team)
+        if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
+            //GameManager.instance.turnSystem.currentTeam == this.team
         {
-            MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(this));
+            mouseController.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(mouseController));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }
     }

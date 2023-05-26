@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class TileCube : NetworkBehaviour
 {
-    public Player player;
+    public PlayerBase player;
     public int G;
     public int H;
     public bool isBlocked;
@@ -25,7 +25,7 @@ public class TileCube : NetworkBehaviour
     public Material clickedMaterial;
     public Material rangeShowMaterial;
     public Material prevmaterial;
-
+    MouseController mouseController;
     // Start is called before the first frame update
     public string GetUnitInfo()
     {
@@ -36,6 +36,7 @@ public class TileCube : NetworkBehaviour
 
     private void Start()
     {
+        mouseController = NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>();
         gameObject.layer = LayerMask.NameToLayer("Tile");
         gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
         prevmaterial = defaultMaterial;
@@ -47,11 +48,11 @@ public class TileCube : NetworkBehaviour
     // }
     private void OnMouseEnter()
     {
-        if (MouseController.instance)
+        if (mouseController)
         {
-            Transform trans = MouseController.instance.cursor.transform;
+            Transform trans = mouseController.cursor.transform;
             Vector3 pos = new Vector3(gameObject.transform.position.x, trans.position.y, gameObject.transform.position.z);
-            MouseController.instance.cursor.transform.position = pos;
+            mouseController.cursor.transform.position = pos;
         }
     }
 
