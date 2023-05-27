@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// health кажется нужно сделать NetworkVariable?
 public class HealthSystem : MonoBehaviour, IDamagable
 {
     Unit unit;

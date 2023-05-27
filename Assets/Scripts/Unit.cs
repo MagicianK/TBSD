@@ -58,9 +58,7 @@ namespace UnitStates
 
         public void Enter()
         {
-            //stateOwner.standingOn.unit = null;
             BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn.coord.Value);
-            //stateOwner.standingOn.isBlocked = false;
         }
 
         public void Execute()
@@ -158,12 +156,8 @@ namespace UnitStates
         {
             if (Input.GetMouseButtonDown(0))
             {
-                var focusedHit = stateOwner.mouseController.GetFocusedTile();
-                if (focusedHit.HasValue)
-                { 
-                    TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
-                    CanIgoThere(tc);
-                }
+                TileCube tc = BoardManager.instance.GetTileAtPosition(Cursor.instance.coord);
+                CanIgoThere(tc);
             }
         }
 

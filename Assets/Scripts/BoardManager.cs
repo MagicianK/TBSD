@@ -5,18 +5,18 @@ using Unity.Netcode;
 [ExecuteInEditMode]
 public class BoardManager : NetworkBehaviour
 {
+    //SINGLETON
     private static BoardManager _instance;
     public static BoardManager instance
     { get { return _instance; } }
 
     [SerializeField] private int _width, _height;
-
     [SerializeField] private TileCube _tilePrefab;
     [SerializeField] private GameObject allTiles;
-    //[SerializeField] private Transform _cam;
 
+    // PROBLEM: Этот массив не заполняется у клиента
+    // из-за этого клиент не может получить тайл через GetTileAtPosition
     private Dictionary<Vector2Int, TileCube> _tiles;
-    //public NetworkVariable<bool> isFilled = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
     public bool isFilled = false;
     private void Awake()
     {
@@ -55,9 +55,9 @@ public class BoardManager : NetworkBehaviour
             }
         }
         isFilled = true;
-        //_cam.transform.position = new Vector3((float)_width / 2 - 0.5f, (float)_height / 2 - 0.5f, -10);
     }
 
+    // Убирает блокировку у тайла
     [ServerRpc]
     public void UnblockTileServerRpc(Vector2Int coord)
     {

@@ -6,26 +6,6 @@ using UnityEngine;
 
 public class RangeFinder
 {
-    //[ServerRpc(RequireOwnership = false)]
-    //public static void GetTilesRangeServerRpc(Vector2Int pos, int range, out List<TileCube> tiles)
-    //{
-    //    GetTilesRangeClientRpc(pos, range, out tiles);
-    //}
-
-    //[ClientRpc]
-    //public static void GetTilesRangeClientRpc(Vector2Int pos, int range, out List<TileCube> tiles)
-    //{
-    //    tiles = new List<TileCube>();
-    //    if (Board.instance.map.ContainsKey(pos))
-    //    {
-    //        TileCube startingTile = Board.instance.map[pos];
-    //        tiles = GetTilesRange(startingTile, range);
-    //    }
-    //    else
-    //    {
-    //        Debug.Log("Position does not exist!");
-    //    }
-    //}
 
     public List<TileCube> GetTilesRange(Vector2Int startingTile, int range)
     {

@@ -23,7 +23,7 @@ public class TileCube : NetworkBehaviour
     public Material rangeShowMaterial;
     public Material darkDefaultMaterial;
 
-
+ 
     
     [ServerRpc(RequireOwnership = false)]
     public void InitServerRpc(bool isOffset, Vector2Int coord)
@@ -32,23 +32,23 @@ public class TileCube : NetworkBehaviour
         gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
     }
 
-    void OnIsBlockedChanged(bool block) => isBlocked.Value = block;
+
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
-            return;
-        //isBlocked.OnValueChanged += (prev, curr) =>
-        //{
-        //    OnIsBlockedChanged(curr);
-        //};
-
-        mouseController = NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>();
+            return;  
         gameObject.layer = LayerMask.NameToLayer("Tile");
         gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
     }
-
+    
+    // Меняет позицию геймобъект курсор на этот куб, когда курсор мышки указывает на коллайдер куба
+    private void OnMouseEnter()
+    {
+        Cursor.instance.StateCursorAt(this.transform.position, coord.Value);
+    }
     private void Update()
     {
+        
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))
         {
             DrawDefault();

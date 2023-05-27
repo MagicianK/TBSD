@@ -20,10 +20,7 @@ namespace MouseStates
 
         public void Execute()
         {
-            // if(Input.GetKeyDown(KeyCode.P))
-            // {
-            //     MouseController.instance.mouseStateMachine.ChangeState(new UnitPlaceState());
-            // }
+
         }
 
         public void Exit()
@@ -119,7 +116,7 @@ public class MouseController : NetworkBehaviour
     {
         this.team.Value = team;
     }
-    // Requires isOwner beyond within the body of the function
+    // Теперь эта функция не нужна думаю
     public RaycastHit? GetFocusedTile()
     {
         RaycastHit hit;
@@ -131,6 +128,7 @@ public class MouseController : NetworkBehaviour
         return null;
     }
 
+    // Ноль референсов я не знаю
     public RaycastHit? GetFocusedUnit()
     {
         RaycastHit hit;

@@ -14,7 +14,7 @@ public class BaseFactory2 : Factory
         GameObject instance = Instantiate(BasePrefab2.gameObject, tile.transform.position, Quaternion.identity);
         instance.GetComponent<NetworkObject>().Spawn();
         PlayerBase newProduct = instance.GetComponent<PlayerBase>();
-        newProduct.standingOn = tile.coord.Value;
+        newProduct.standingOn.Value = tile.coord.Value;
         newProduct.Initialize();
 
         return newProduct;

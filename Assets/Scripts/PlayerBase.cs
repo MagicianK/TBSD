@@ -43,7 +43,7 @@ namespace PlayerBaseStates
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
                 //Debug.Log("Checking if owner is null " + stateOwner.location2D.Value);
                 //RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
-                List<TileCube> tiles = stateOwner.rangeFinder.GetTilesRange(stateOwner.standingOn, 1);
+                List<TileCube> tiles = stateOwner.rangeFinder.GetTilesRange(stateOwner.standingOn.Value, 1);
 
                 foreach (var tile in tiles)
                 {
@@ -75,9 +75,8 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public MouseController mouseController;
     public List<Unit> units;
     private int health;
-    public Vector2Int standingOn;
     public RangeFinder rangeFinder = new RangeFinder();
-    public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
     public string ProductName { get => productName; set => productName = value; }
     public void Initialize()
@@ -132,7 +131,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public Vector2Int GetStandingOnTile()
     {
-        return standingOn;
+        return standingOn.Value;
     }
 
     public int GetPreyTeam()
@@ -175,6 +174,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         }
     }
 
+    // —трашное мессиво
     public void CreateUnit(TileCube tileCube)
     {
         GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
@@ -189,6 +189,8 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         units.Add(unitToPlace.GetComponent<Unit>());
     }
 
+    // я тут хотел добавить проверку на IsOwner, но так уже у клиента нельз€ будет выбрать базу
+    // ¬се юниты и базы имеют IsOwner = true только у сервера как € понимаю 
     private void OnMouseDown()
     {
         // Enables selection state only if Mouse state is Idle and it is their turn

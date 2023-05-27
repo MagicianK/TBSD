@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+
+// TurnManager по идее тоже должен хранить turns в NetworkVariable
 public class TurnManager : MonoBehaviour
 {
     public int currentTeam = 0;
@@ -10,9 +12,9 @@ public class TurnManager : MonoBehaviour
     public int turns = maxTurns;
     public Text text;
     private void Start() {
-        //text.text = "Team Turn: " + currentTeam;
+
     }
-   // Unit[] armyUnits = FindObjectsOfType(typeof(Unit)) as Unit[];
+
 
     public void StartTurn()
     {

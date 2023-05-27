@@ -4,6 +4,8 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Тут только эти классы и интейрфейсы нужны 
+// Сам скрипт не соответсвтует своему предназначению
 public interface IState
 {
     public void Enter();
