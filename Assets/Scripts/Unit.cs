@@ -244,8 +244,6 @@ public class Unit : NetworkBehaviour
 
     private void Start()
     {
-        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
-            return;
         pathFinder = new PathFinder();
         path = new List<TileCube>();
         startColor = GetComponentInChildren<Renderer>().material.color;
@@ -286,7 +284,8 @@ public class Unit : NetworkBehaviour
         stateMachine.Update();
     }
 
-    private void OnNetwrokDestroy()
+    
+    public override void OnNetworkDespawn()
     {
         owner.units.Remove(this);
     }
@@ -303,8 +302,7 @@ public class Unit : NetworkBehaviour
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
-        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
-            return;
+
         var step = MOVEMENT_ANIMATION_SPEED * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;

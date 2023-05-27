@@ -1,5 +1,7 @@
 using UnityEngine;
 using Unity.Netcode;
+
+// Base factory for player2
 public class BaseFactory2 : Factory
 {
     [SerializeField]
