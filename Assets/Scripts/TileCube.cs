@@ -12,8 +12,8 @@ public class TileCube : NetworkBehaviour
     public int H;
     public int F
     { get { return G + H; } }
-    public Vector2Int previous;
 
+    public Vector2Int previous;
 
     public NetworkVariable<bool> isBlocked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
     public NetworkVariable<Vector2Int> coord = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
@@ -30,22 +30,23 @@ public class TileCube : NetworkBehaviour
     {
         this.coord.Value = coord;
         gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
-        InitClientRpc(isOffset, coord);
-    }
-    [ClientRpc]
-    public void InitClientRpc(bool isOffset, Vector2Int coord)
-    {
-        this.coord.Value = coord;
-        gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
     }
 
-
-    private void Start()
+    void OnIsBlockedChanged(bool block) => isBlocked.Value = block;
+    public override void OnNetworkSpawn()
     {
+        if (!IsOwner)
+            return;
+        //isBlocked.OnValueChanged += (prev, curr) =>
+        //{
+        //    OnIsBlockedChanged(curr);
+        //};
+
         mouseController = NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>();
         gameObject.layer = LayerMask.NameToLayer("Tile");
         gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
     }
+
     private void Update()
     {
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))

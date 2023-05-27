@@ -27,15 +27,16 @@ public class RangeFinder
     //    }
     //}
 
-    public List<TileCube> GetTilesRange(TileCube startingTile, int range)
+    public List<TileCube> GetTilesRange(Vector2Int startingTile, int range)
     {
+        TileCube startTile = BoardManager.instance.GetTileAtPosition(startingTile);
         var inRangeTiles = new List<TileCube>();
         int stepCount = 0;
 
-        inRangeTiles.Add(startingTile);
+        inRangeTiles.Add(startTile);
 
         var tileForPreviousStep = new List<TileCube>();
-        tileForPreviousStep.Add(startingTile);
+        tileForPreviousStep.Add(startTile);
 
         while (stepCount < range)
         {
@@ -43,9 +44,8 @@ public class RangeFinder
 
             foreach (var item in tileForPreviousStep)
             {
-                //Debug.Log("Item " + item.grid2DLocation);
                 if (item)
-                    surroundingTiles.AddRange(BoardManager.instance.GetNeighbourTiles(item));
+                    surroundingTiles.AddRange(BoardManager.instance.GetNeighbourTiles(item.coord.Value));
             }
             inRangeTiles.AddRange(surroundingTiles);
             tileForPreviousStep = surroundingTiles.Distinct().ToList();
@@ -55,13 +55,4 @@ public class RangeFinder
         return inRangeTiles.Distinct().ToList();
     }
 
-    // Start is called before the first frame update
-    private void Start()
-    {
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
-    }
 }

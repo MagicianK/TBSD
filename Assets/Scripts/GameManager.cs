@@ -17,7 +17,7 @@ public interface IDamagable
 {
     public void TakeDamage(int damage);
 
-    public TileCube GetStandingOnTile();
+    public Vector2Int GetStandingOnTile();
 
     public int GetPreyTeam();
 }

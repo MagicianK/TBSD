@@ -69,15 +69,13 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public Unit unit2prefab;
     public Unit unit3prefab;
     public int team;
-    public int points = 5000;
     public StateMachine stateMachine = new StateMachine();
-    public Unit unitToPlace;
     [SerializeField]
     private UnitData unitData;
     public MouseController mouseController;
     public List<Unit> units;
     private int health;
-    public TileCube standingOn;
+    public Vector2Int standingOn;
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
@@ -94,11 +92,13 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
-        mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
+        
     }
 
     private void Update()
     {
+        if (!mouseController)
+            mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
         stateMachine.Update();
         //if (GameManager.instance.turnSystem == null)
         //{
@@ -130,7 +130,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         Debug.Log($"Player {this.team - 1}");
     }
 
-    public TileCube GetStandingOnTile()
+    public Vector2Int GetStandingOnTile()
     {
         return standingOn;
     }
@@ -177,17 +177,16 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public void CreateUnit(TileCube tileCube)
     {
-        unitToPlace = Instantiate(unit1prefab);
+        GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
         if (IsServer)
-            unitToPlace.NetworkObject.Spawn();
+            unitToPlace.GetComponent<NetworkObject>().Spawn();
 
-        unitToPlace.standingOn = tileCube;
+        unitToPlace.GetComponent<Unit>().standingOn = tileCube;
         BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
         unitToPlace.transform.position = tileCube.transform.position;
-        unitToPlace.InitValues(this.team, this, mouseController);
-        mouseController.selectedUnit = unitToPlace;
-        units.Add(unitToPlace);
-        unitToPlace = null;
+        unitToPlace.GetComponent<Unit>().InitValues(this.team, this, mouseController);
+        mouseController.selectedUnit = unitToPlace.GetComponent<Unit>();
+        units.Add(unitToPlace.GetComponent<Unit>());
     }
 
     private void OnMouseDown()

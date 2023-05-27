@@ -59,7 +59,7 @@ namespace UnitStates
         public void Enter()
         {
             //stateOwner.standingOn.unit = null;
-            BoardManager.instance.BlockTileServerRpc(stateOwner.standingOn.coord.Value);
+            BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn.coord.Value);
             //stateOwner.standingOn.isBlocked = false;
         }
 
@@ -130,7 +130,7 @@ namespace UnitStates
                     prey = hit.collider.gameObject.GetComponent<IDamagable>();
                 }
 
-                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(prey.GetStandingOnTile()))
+                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.GetStandingOnTile())))
                     stateOwner.stateMachine.ChangeState(new Attack(stateOwner, prey));
             }
         }
@@ -156,11 +156,11 @@ namespace UnitStates
 
         public void Execute()
         {
-            if (Input.GetMouseButtonUp(0))
+            if (Input.GetMouseButtonDown(0))
             {
                 var focusedHit = stateOwner.mouseController.GetFocusedTile();
                 if (focusedHit.HasValue)
-                {
+                { 
                     TileCube tc = focusedHit.Value.collider.gameObject.GetComponent<TileCube>();
                     CanIgoThere(tc);
                 }
@@ -258,7 +258,7 @@ public class Unit : NetworkBehaviour
     }
     private void OnMouseDown()
     {
-        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
+        if (!IsOwner)
             return;
         // If mouse is in Idle state unit can be selected
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
@@ -340,7 +340,7 @@ public class Unit : NetworkBehaviour
 
         //RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
         //inRangeTiles = tempList;
-        inRangeTiles = rangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
+        inRangeTiles = rangeFinder.GetTilesRange(standingOn.coord.Value, unitData.MovementRange);
         //inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
         foreach (var item in inRangeTiles)
         {

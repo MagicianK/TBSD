@@ -16,9 +16,9 @@ public class HealthSystem : MonoBehaviour, IDamagable
     public int GetPreyTeam(){
         return this.team;
     }
-    public TileCube GetStandingOnTile()
+    public Vector2Int GetStandingOnTile()
     {
-        return unit.standingOn;
+        return unit.standingOn.coord.Value;
     }
     public void TakeDamage(int damage){
         this.health -= damage;

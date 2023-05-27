@@ -24,7 +24,7 @@ public class PathFinder : MonoBehaviour
                 return GetFinishedList(start, end);
             }
 
-            var neighbourTiles = BoardManager.instance.GetNeighbourTiles(currentTile);
+            var neighbourTiles = BoardManager.instance.GetNeighbourTiles(currentTile.coord.Value);
 
             foreach (var neighbour in neighbourTiles)
             {

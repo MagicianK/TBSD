@@ -10,15 +10,16 @@ public class Waiter : NetworkBehaviour
 
     PlayerBase playerBase1;
     PlayerBase playerBase2;
-
+    bool isBasesCreated = false;
     void Start()
     {
         baseFactory1 = GetComponent<BaseFactory1>();
         baseFactory2 = GetComponent<BaseFactory2>();
     }
-    [ServerRpc(RequireOwnership = false)]
+    [ServerRpc]
     void DespawnServerRpc()
     {
+        NetworkObject.DontDestroyWithOwner = true;
         NetworkObject.Despawn();
     }
     void Update()
@@ -34,10 +35,10 @@ public class Waiter : NetworkBehaviour
             IReadOnlyList<NetworkClient> clients = NetworkManager.Singleton.ConnectedClientsList;
 
 
-            playerBase1.team = clients[0].PlayerObject.GetComponent<MouseController>().team;
-            playerBase2.team = clients[1].PlayerObject.GetComponent<MouseController>().team;
+            playerBase1.team = clients[0].PlayerObject.GetComponent<MouseController>().team.Value;
+            playerBase2.team = clients[1].PlayerObject.GetComponent<MouseController>().team.Value;
 
-            DespawnServerRpc();
+            this.enabled = false;
         }
     }
 }

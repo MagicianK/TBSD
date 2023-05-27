@@ -88,32 +88,43 @@ public class MouseController : NetworkBehaviour
 
     public StateMachine mouseStateMachine = new StateMachine();
     public Unit selectedUnit { get; set; }
-    public int team;
-
+    public NetworkVariable<int> team = new NetworkVariable<int>();
+    public TileCube clickedTile;
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
             return;
         if (IsHost)
-            team = 0;
+            team.Value = 0;
         if (IsClient && !IsHost)
-            team = 1;
+            SetTeamServerRpc(1);
     }
-    
+    private void Start()
+    {
+        mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+    }
     private void Update()
     {
         if (!IsOwner)
             return;
 
+        if (Input.GetMouseButtonDown(0))
+            clickedTile = GetFocusedTile().Value.collider.gameObject.GetComponent<TileCube>();
+        
         mouseStateMachine.Update();
     }
 
+    [ServerRpc]
+    void SetTeamServerRpc(int team)
+    {
+        this.team.Value = team;
+    }
     // Requires isOwner beyond within the body of the function
     public RaycastHit? GetFocusedTile()
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit, LayerMask.GetMask("Hover")))
+        if (Physics.Raycast(ray, out hit, LayerMask.GetMask("Tile")))
         {
             return hit;
         }

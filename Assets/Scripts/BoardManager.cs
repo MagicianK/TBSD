@@ -31,10 +31,12 @@ public class BoardManager : NetworkBehaviour
     }
     public override void OnNetworkSpawn()
     {
-        GenerateGrid();
+        if(IsServer)
+            GenerateGridServerRpc();
     }
     
-    void GenerateGrid()
+    [ServerRpc]
+    void GenerateGridServerRpc()
     {
         _tiles = new Dictionary<Vector2Int, TileCube>();
         for (int x = 0; x < _width; x++)
@@ -45,9 +47,9 @@ public class BoardManager : NetworkBehaviour
                 spawnedTile.name = $"Tile {x} {y}";
 
                 var isOffset = (x % 2 == 0 && y % 2 != 0) || (x % 2 != 0 && y % 2 == 0);
-                spawnedTile.InitServerRpc(isOffset, new Vector2Int(x,y));
+                spawnedTile.GetComponent<NetworkObject>().Spawn();
 
-
+                spawnedTile.InitServerRpc(isOffset, new Vector2Int(x, y));
                 _tiles[new Vector2Int(x, y)] = spawnedTile;
                 
             }
@@ -55,12 +57,14 @@ public class BoardManager : NetworkBehaviour
         isFilled = true;
         //_cam.transform.position = new Vector3((float)_width / 2 - 0.5f, (float)_height / 2 - 0.5f, -10);
     }
-    [ClientRpc]
-    public void BlockTileClientRpc(Vector2Int coord)
+
+    [ServerRpc]
+    public void UnblockTileServerRpc(Vector2Int coord)
     {
         if (!IsOwner)
             return;
-        _tiles[coord].isBlocked.Value = true;
+        _tiles[coord].isBlocked.Value = false;
+
     }
     [ServerRpc]
     public void BlockTileServerRpc(Vector2Int coord)
@@ -68,7 +72,7 @@ public class BoardManager : NetworkBehaviour
         if (!IsOwner)
             return;
         _tiles[coord].isBlocked.Value = true;
-        BlockTileClientRpc(coord);
+        //BlockTileClientRpc(coord);
     }
     public TileCube GetTileAtPosition(Vector2Int pos)
     {
@@ -76,12 +80,12 @@ public class BoardManager : NetworkBehaviour
         return null;
     }
 
-    public List<TileCube> GetNeighbourTiles(TileCube currentTile)
+    public List<TileCube> GetNeighbourTiles(Vector2Int currentTile)
     {
         List<TileCube> neighbours = new List<TileCube>();
 
         // TOP
-        Vector2Int locationToCheck = new Vector2Int(currentTile.coord.Value.x, currentTile.coord.Value.y + 1);
+        Vector2Int locationToCheck = new Vector2Int(currentTile.x, currentTile.y + 1);
 
         if (_tiles.ContainsKey(locationToCheck))
         {
@@ -89,7 +93,7 @@ public class BoardManager : NetworkBehaviour
         }
 
         // BOTTOM
-        locationToCheck = new Vector2Int(currentTile.coord.Value.x, currentTile.coord.Value.y - 1);
+        locationToCheck = new Vector2Int(currentTile.x, currentTile.y - 1);
 
         if (_tiles.ContainsKey(locationToCheck))
         {
@@ -97,7 +101,7 @@ public class BoardManager : NetworkBehaviour
         }
 
         // RIGHT
-        locationToCheck = new Vector2Int(currentTile.coord.Value.x + 1, currentTile.coord.Value.y);
+        locationToCheck = new Vector2Int(currentTile.x + 1, currentTile.y);
 
         if (_tiles.ContainsKey(locationToCheck))
         {
@@ -105,7 +109,7 @@ public class BoardManager : NetworkBehaviour
         }
 
         // LEFT
-        locationToCheck = new Vector2Int(currentTile.coord.Value.x - 1, currentTile.coord.Value.y);
+        locationToCheck = new Vector2Int(currentTile.x - 1, currentTile.y);
 
         if (_tiles.ContainsKey(locationToCheck))
         {
