@@ -33,11 +33,6 @@ public class BoardManager : NetworkBehaviour
     {
         GenerateGrid();
     }
-    [ServerRpc(RequireOwnership = false)]
-    private void SpawnTilesServerRpc()
-    {
-        //GenerateGridClientRpc();
-    }
     
     void GenerateGrid()
     {
@@ -73,6 +68,7 @@ public class BoardManager : NetworkBehaviour
         if (!IsOwner)
             return;
         _tiles[coord].isBlocked.Value = true;
+        BlockTileClientRpc(coord);
     }
     public TileCube GetTileAtPosition(Vector2Int pos)
     {
@@ -82,8 +78,6 @@ public class BoardManager : NetworkBehaviour
 
     public List<TileCube> GetNeighbourTiles(TileCube currentTile)
     {
-        //if (!NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
-        //    return new List<TileCube>();
         List<TileCube> neighbours = new List<TileCube>();
 
         // TOP

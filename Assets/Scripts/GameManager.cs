@@ -65,44 +65,4 @@ public class GameManager : NetworkBehaviour
             _instance = this;
         }
     }
-
-    public override void OnNetworkSpawn()
-    {
-        //turnSystem = new TurnSystem();
-        //turnSystem.text = text; // Temporary solution
-
-        //if (IsServer)
-        //    StartCoroutine(CreatePlayerBases());
-    }
-
-    private void Start()
-    {
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void CreatePlayerBasesServerRpc()
-    {
-        CreatePlayerBasesClientRpc();
-    }
-
-    [ClientRpc]
-    private void CreatePlayerBasesClientRpc()
-    {
-        Debug.Log("Spawning bases");
-        
-    }
-
-    private IEnumerator CreatePlayerBases()
-    {
-        while (!Board.instance.isFilled)
-        {
-            yield return null;
-        }
-
-        CreatePlayerBasesClientRpc();
-    }
-
-    private void Update()
-    {
-    }
 }

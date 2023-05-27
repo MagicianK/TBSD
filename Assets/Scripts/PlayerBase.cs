@@ -63,7 +63,7 @@ namespace PlayerBaseStates
     }
 }
 
-public class PlayerBase : NetworkBehaviour, IDamagable
+public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 {
     public Unit unit1prefab;
     public Unit unit2prefab;
@@ -81,8 +81,12 @@ public class PlayerBase : NetworkBehaviour, IDamagable
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> location2D = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
+    public string ProductName { get => productName; set => productName = value; }
+    public void Initialize()
+    {
+        gameObject.name = productName;
 
-    
+    }
     // Start is called before the first frame update
     private void Start()
     {

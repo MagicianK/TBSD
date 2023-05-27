@@ -5,83 +5,49 @@ using UnityEngine;
 
 public class TileCube : NetworkBehaviour
 {
-    //public PlayerBase player;
+    // TileCube should store G, H, F for PathFinder
+    // TileCube should store isBlocked for PathFinder
+    // TileCube should store coord 
     public int G;
     public int H;
-    //public bool isBlocked;
-    public NetworkVariable<bool> isBlocked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
-    public NetworkVariable<Vector2Int> coord = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     public int F
     { get { return G + H; } }
-
-    //public Unit unit;
     public Vector2Int previous;
-    public Vector3Int gridLocation;
 
-    //public Vector2Int grid2DLocation
-    //{ get { return new Vector2Int(gridLocation.x, gridLocation.z); } }
 
-    
-    public Material hoverMaterial;
-    public Material defaultMaterial;
-    public Material clickedMaterial;
-    public Material rangeShowMaterial;
-    public Material prevmaterial;
-    public Material darkDefaultMaterial;
+    public NetworkVariable<bool> isBlocked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<Vector2Int> coord = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     MouseController mouseController;
-    // Start is called before the first frame update
-    //public string GetUnitInfo()
-    //{
-    //    if (unit != null)
-    //        return unit.ToString();
-    //    return "empty";
-    //}
+
+    public Material defaultMaterial;
+    public Material rangeShowMaterial;
+    public Material darkDefaultMaterial;
+
+
     
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void InitServerRpc(bool isOffset, Vector2Int coord)
     {
         this.coord.Value = coord;
         gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
+        InitClientRpc(isOffset, coord);
     }
+    [ClientRpc]
+    public void InitClientRpc(bool isOffset, Vector2Int coord)
+    {
+        this.coord.Value = coord;
+        gameObject.GetComponent<MeshRenderer>().material = isOffset ? darkDefaultMaterial : defaultMaterial;
+    }
+
+
     private void Start()
     {
         mouseController = NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>();
         gameObject.layer = LayerMask.NameToLayer("Tile");
         gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
-        prevmaterial = defaultMaterial;
     }
-
-    // private void OnMouseDown() {
-    //     Debug.Log("grid location of cube: " + gridLocation);
-    //     Debug.Log("Does cube has unit: " + ((unit != null) || (player != null)));
-    // }
-    private void OnMouseEnter()
-    {
-        if (mouseController)
-        {
-            Transform trans = mouseController.cursor.transform;
-            Vector3 pos = new Vector3(gameObject.transform.position.x, trans.position.y, gameObject.transform.position.z);
-            mouseController.cursor.transform.position = pos;
-        }
-    }
-
-    public void DrawBlue()
-    {
-        gameObject.GetComponent<MeshRenderer>().material = rangeShowMaterial;
-    }
-
-    public void DrawDefault()
-    {
-        gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
-    }
-
-    // Update is called once per frame
     private void Update()
     {
-        //if (unit != null)
-        //{
-        //    isBlocked = true;
-        //}
         if (gameObject.layer == LayerMask.NameToLayer("Tile"))
         {
             DrawDefault();
@@ -91,9 +57,17 @@ public class TileCube : NetworkBehaviour
             DrawBlue();
         }
     }
-
-    public void ChangeLayer(LayerMask layer)
+    public void DrawBlue()
     {
-        gameObject.layer = layer;
+        gameObject.GetComponent<MeshRenderer>().material = rangeShowMaterial;
+    }
+
+    public void DrawDefault()
+    {
+        gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
+    }
+    public void ChangeLayer(LayerMask newLayer)
+    {
+        gameObject.layer = newLayer;
     }
 }

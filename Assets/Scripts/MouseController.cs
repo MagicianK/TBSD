@@ -79,136 +79,27 @@ namespace MouseStates
             stateOwner.selectedUnit = null;
         }
     }
-
-    // public class UnitPlaceState : IState
-    // {
-    //     public void Enter()
-    //     {
-    //         if (MouseController.instance.selectedUnit != null)
-    //         {
-    //             MouseController.instance.selectedUnit.ClearRange();
-    //             MouseController.instance.selectedUnit = null;
-    //         }
-    //         Debug.Log("YOU WANT TO PLACE UNIT");
-    //     }
-
-    //     public void Execute()
-    //     {
-    //         var focusedTileHit = Input.GetMouseButtonUp(0) ? MouseController.instance.GetFocusedTile() : null;
-    //         if (Input.GetMouseButtonUp(0) && focusedTileHit.HasValue)
-    //         {
-    //             TileCube clickedTile = focusedTileHit.Value.collider.gameObject.GetComponent<TileCube>();
-    //             MouseController.instance.CreateUnit(clickedTile);
-    //             MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.OnUnitState());
-    //         }
-    //     }
-
-    //     public void Exit()
-    //     {
-    //         Unit selectedUnit = MouseController.instance.selectedUnit;
-    //         selectedUnit.stateMachine.ChangeState(new UnitStates.Selected(selectedUnit));
-    //         Debug.Log("IDLE");
-    //     }
-    // }
 }
 
 public class MouseController : NetworkBehaviour
 {
-    // Change state of the mouse in UPDATE()
-    // Handle changes in UPDATE()
+    // Server authorative base creation
+    // Create bases locally and then in a server 
+
     public StateMachine mouseStateMachine = new StateMachine();
-
-    //private static MouseController _instance;
-
-    //public static MouseController instance
-    //{ get { return _instance; } }
-
-    public GameObject cursor;
-    public Unit selectedUnit;
-    [SerializeField] private Unit unitPrefab;
-    public Unit unitToPlace;
-    private TileCube clickedTile;
-    public Unit clickedUnit;
+    public Unit selectedUnit { get; set; }
     public int team;
-    public BaseFactory baseFactory;
-    
-    //private void Awake()
-    //{
-    //    if (_instance != null && _instance != this)
-    //    {
-    //        Destroy(this.gameObject);
-    //    }
-    //    else
-    //    {
-    //        _instance = this;
-    //    }
-    //}
 
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
             return;
-        baseFactory = GetComponent<BaseFactory>();
         if (IsHost)
-        {
-            this.team = 0;
-            StartCoroutine(WaitAndCreate(baseFactory.CreateFirstBaseClientRpc, this));
-            //StartCoroutine(WaitAndCreateLocally(baseFactory.CreateFirstBase, this));
-        }
-        else if (IsClient && !IsHost)
-        {
-            this.team = 1;
-            StartCoroutine(WaitAndCreate(baseFactory.CreateSecondBaseServerRpc, this));
-            StartCoroutine(WaitAndCreateLocally(baseFactory.CreateSecondBase, this));
-        }
+            team = 0;
+        if (IsClient && !IsHost)
+            team = 1;
     }
-    private void Start()
-    {
-        if (!IsOwner)
-            return;
-
-        mouseStateMachine.ChangeState(new MouseStates.Idle(this));
-    }
-    public IEnumerator WaitAndCreateLocally(BaseFactory.CreateBaseX createBaseX, MouseController mc)
-    {
-        while (!Board.instance.isFilled)
-        {
-            yield return null;
-        }
-        createBaseX(mc);
-    }
-    public IEnumerator WaitAndCreate(BaseFactory.CreateBaseXRpc createBaseXRpc, NetworkBehaviourReference nbr)
-    {
-        while (!BoardManager.instance.isFilled)
-        {
-            yield return null;
-        }
-        createBaseXRpc(nbr);
-    }
-
-    private void LateUpdate()
-    {
-        if (!IsOwner)
-            return;
-
-        // Get clicked Tile or Unit
-        var focusedTileHit = Input.GetMouseButtonUp(0) ? GetFocusedTile() : null;
-        var focusedUnitHit = Input.GetMouseButtonUp(0) ? GetFocusedUnit() : null;
-
-        // Handle Unit click
-        if (focusedUnitHit != null && focusedUnitHit.HasValue)
-        {
-            clickedUnit = focusedUnitHit.Value.collider.GetComponentInParent<Unit>();
-        }
-
-        // Handle TileCube click
-        if (focusedTileHit != null && focusedTileHit.HasValue)
-        {
-            clickedTile = focusedTileHit.Value.collider.gameObject.GetComponent<TileCube>();
-        }
-    }
-
-    // Update is called once per frame
+    
     private void Update()
     {
         if (!IsOwner)
@@ -217,6 +108,7 @@ public class MouseController : NetworkBehaviour
         mouseStateMachine.Update();
     }
 
+    // Requires isOwner beyond within the body of the function
     public RaycastHit? GetFocusedTile()
     {
         RaycastHit hit;
@@ -238,5 +130,4 @@ public class MouseController : NetworkBehaviour
         }
         return null;
     }
-
 }
