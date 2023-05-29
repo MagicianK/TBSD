@@ -20,7 +20,7 @@ public class BoardManager : NetworkBehaviour
     // из-за этого клиент не может получить тайл через GetTileAtPosition
     private Dictionary<Vector2Int, TileCube> _tiles;
 
-    public bool isFilled = false;
+    public NetworkVariable<bool> isFilled = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
 
     private void Awake()
     {
@@ -32,6 +32,19 @@ public class BoardManager : NetworkBehaviour
         {
             _instance = this;
         }
+    }
+
+    private void Update()
+    {
+        StartCoroutine(FillTilesDictionary());
+    }
+
+    private IEnumerator FillTilesDictionary()
+    {
+        if (!isFilled.Value)
+            yield return null;
+
+        FillTilesDictionaryClientRpc();
     }
 
     public override void OnNetworkSpawn()
@@ -58,8 +71,7 @@ public class BoardManager : NetworkBehaviour
                 _tiles[new Vector2Int(x, y)] = spawnedTile;
             }
         }
-        FillTilesDictionaryClientRpc();
-        isFilled = true;
+        isFilled.Value = true;
     }
 
     [ClientRpc]
@@ -70,6 +82,7 @@ public class BoardManager : NetworkBehaviour
         {
             _tiles[tileCube.coord.Value] = tileCube;
         }
+        Debug.Log("Filled!");
     }
 
     // Убирает блокировку у тайла
@@ -93,6 +106,7 @@ public class BoardManager : NetworkBehaviour
     public TileCube GetTileAtPosition(Vector2Int pos)
     {
         if (_tiles.TryGetValue(pos, out var tile)) return tile;
+
         return null;
     }
 
