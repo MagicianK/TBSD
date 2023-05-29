@@ -2,11 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+
 [ExecuteInEditMode]
 public class BoardManager : NetworkBehaviour
 {
     //SINGLETON
     private static BoardManager _instance;
+
     public static BoardManager instance
     { get { return _instance; } }
 
@@ -17,7 +19,9 @@ public class BoardManager : NetworkBehaviour
     // PROBLEM: Этот массив не заполняется у клиента
     // из-за этого клиент не может получить тайл через GetTileAtPosition
     private Dictionary<Vector2Int, TileCube> _tiles;
+
     public bool isFilled = false;
+
     private void Awake()
     {
         if (_instance != null && _instance != this)
@@ -29,16 +33,17 @@ public class BoardManager : NetworkBehaviour
             _instance = this;
         }
     }
+
     public override void OnNetworkSpawn()
     {
-        if(IsServer)
+        _tiles = new Dictionary<Vector2Int, TileCube>();
+        if (IsServer)
             GenerateGridServerRpc();
     }
-    
+
     [ServerRpc]
-    void GenerateGridServerRpc()
+    private void GenerateGridServerRpc()
     {
-        _tiles = new Dictionary<Vector2Int, TileCube>();
         for (int x = 0; x < _width; x++)
         {
             for (int y = 0; y < _height; y++)
@@ -51,10 +56,20 @@ public class BoardManager : NetworkBehaviour
 
                 spawnedTile.InitServerRpc(isOffset, new Vector2Int(x, y));
                 _tiles[new Vector2Int(x, y)] = spawnedTile;
-                
             }
         }
+        FillTilesDictionaryClientRpc();
         isFilled = true;
+    }
+
+    [ClientRpc]
+    public void FillTilesDictionaryClientRpc()
+    {
+        TileCube[] tileCubes = FindObjectsOfType<TileCube>();
+        foreach (var tileCube in tileCubes)
+        {
+            _tiles[tileCube.coord.Value] = tileCube;
+        }
     }
 
     // Убирает блокировку у тайла
@@ -64,8 +79,8 @@ public class BoardManager : NetworkBehaviour
         if (!IsOwner)
             return;
         _tiles[coord].isBlocked.Value = false;
-
     }
+
     [ServerRpc]
     public void BlockTileServerRpc(Vector2Int coord)
     {
@@ -74,6 +89,7 @@ public class BoardManager : NetworkBehaviour
         _tiles[coord].isBlocked.Value = true;
         //BlockTileClientRpc(coord);
     }
+
     public TileCube GetTileAtPosition(Vector2Int pos)
     {
         if (_tiles.TryGetValue(pos, out var tile)) return tile;
@@ -89,6 +105,7 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
+            Debug.Log("Added top tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -97,6 +114,7 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
+            Debug.Log("Added bottom tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -105,6 +123,7 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
+            Debug.Log("Added right tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -113,6 +132,7 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
+            Debug.Log("Added left tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
