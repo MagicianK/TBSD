@@ -29,6 +29,7 @@ namespace PlayerBaseStates
     public class Selected : IState
     {
         private PlayerBase stateOwner;
+
         public Selected(PlayerBase owner)
         { this.stateOwner = owner; }
 
@@ -50,7 +51,8 @@ namespace PlayerBaseStates
                     Debug.Log("Tile " + tile);
                     if (tile && !tile.isBlocked.Value)
                     {
-                        stateOwner.CreateUnitServerRpc(tile.coord.Value);
+                        Debug.Log("Creating Unit");
+                        stateOwner.CreateUnitServerRpc(tile.coord.Value, stateOwner.OwnerClientId);
                         break;
                     }
                 }
@@ -72,6 +74,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public StateMachine stateMachine = new StateMachine();
     [SerializeField]
     private UnitData unitData;
+
     public MouseController mouseController;
     public List<Unit> units;
     private int health;
@@ -79,11 +82,12 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
     public string ProductName { get => productName; set => productName = value; }
+
     public void Initialize()
     {
         gameObject.name = productName;
-
     }
+
     // Start is called before the first frame update
     private void Start()
     {
@@ -91,7 +95,6 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
-        
     }
 
     private void Update()
@@ -104,7 +107,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         //    return;
         //}
 
-        // TODO: Turn Manager 
+        // TODO: Turn Manager
         if (false)
         {
             foreach (Unit unit in units)
@@ -147,12 +150,12 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void CreateUnitServerRpc(Vector2Int pos)
+    public void CreateUnitServerRpc(Vector2Int pos, ulong clientId)
     {
         if (BoardManager.instance.GetTileAtPosition(pos))
         {
             TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
-            CreateUnit(tileCube);
+            CreateUnit(tileCube, clientId);
         }
         else
         {
@@ -166,7 +169,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         if (BoardManager.instance.GetTileAtPosition(pos))
         {
             TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
-            CreateUnit(tileCube);
+            CreateUnit(tileCube, NetworkManager.LocalClientId);
         }
         else
         {
@@ -174,7 +177,6 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         }
     }
 
-    // Страшное мессиво
     public void CreateUnit(TileCube tileCube)
     {
         GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
@@ -189,13 +191,30 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         units.Add(unitToPlace.GetComponent<Unit>());
     }
 
+    // Страшное мессиво
+    public void CreateUnit(TileCube tileCube, ulong clientId)
+    {
+        GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
+        if (IsServer)
+            unitToPlace.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+
+        Debug.LogWarning("Spawned with ownership for " + clientId);
+
+        unitToPlace.GetComponent<Unit>().standingOn = tileCube;
+        BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
+        unitToPlace.transform.position = tileCube.transform.position;
+        unitToPlace.GetComponent<Unit>().InitValues(this.team, this, mouseController);
+        mouseController.selectedUnit = unitToPlace.GetComponent<Unit>();
+        units.Add(unitToPlace.GetComponent<Unit>());
+    }
+
     // Я тут хотел добавить проверку на IsOwner, но так уже у клиента нельзя будет выбрать базу
-    // Все юниты и базы имеют IsOwner = true только у сервера как я понимаю 
+    // Все юниты и базы имеют IsOwner = true только у сервера как я понимаю
     private void OnMouseDown()
     {
         // Enables selection state only if Mouse state is Idle and it is their turn
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
-            //GameManager.instance.turnSystem.currentTeam == this.team
+        //GameManager.instance.turnSystem.currentTeam == this.team
         {
             mouseController.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(mouseController));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
