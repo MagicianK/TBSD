@@ -91,6 +91,8 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     // Start is called before the first frame update
     private void Start()
     {
+        if(IsOwner)
+            GetComponentInChildren<Renderer>().material.color = Color.red;
         stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
         health = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
@@ -177,45 +179,39 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         }
     }
 
-    public void CreateUnit(TileCube tileCube)
-    {
-        GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
-        if (IsServer)
-            unitToPlace.GetComponent<NetworkObject>().Spawn();
-
-        unitToPlace.GetComponent<Unit>().standingOn = tileCube;
-        BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
-        unitToPlace.transform.position = tileCube.transform.position;
-        unitToPlace.GetComponent<Unit>().InitValues(this.team, this, mouseController);
-        mouseController.selectedUnit = unitToPlace.GetComponent<Unit>();
-        units.Add(unitToPlace.GetComponent<Unit>());
-    }
-
+   
     // —трашное мессиво
     public void CreateUnit(TileCube tileCube, ulong clientId)
     {
         GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
-        if (IsServer)
-            unitToPlace.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
-
+     
         Debug.LogWarning("Spawned with ownership for " + clientId);
 
         unitToPlace.GetComponent<Unit>().standingOn = tileCube;
         BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
         unitToPlace.transform.position = tileCube.transform.position;
+
+        // mouseController is given to unit here
+        // but it work surely given only to the server side.
+        // In the client unit does not have mouseController
         unitToPlace.GetComponent<Unit>().InitValues(this.team, this, mouseController);
         mouseController.selectedUnit = unitToPlace.GetComponent<Unit>();
         units.Add(unitToPlace.GetComponent<Unit>());
+        if (IsServer)
+            unitToPlace.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+
     }
 
-    // я тут хотел добавить проверку на IsOwner, но так уже у клиента нельз€ будет выбрать базу
-    // ¬се юниты и базы имеют IsOwner = true только у сервера как € понимаю
     private void OnMouseDown()
     {
+        if (!IsOwner)
+            return;
+        
         // Enables selection state only if Mouse state is Idle and it is their turn
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
         //GameManager.instance.turnSystem.currentTeam == this.team
         {
+            mouseController.playerBase = this;
             mouseController.mouseStateMachine.ChangeState(new MouseStates.OnPlayerBaseState(mouseController));
             stateMachine.ChangeState(new PlayerBaseStates.Selected(this));
         }

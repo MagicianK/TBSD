@@ -26,15 +26,4 @@ public class SelectedView : MonoBehaviour
     public void MoveTo(Vector3 pos){
         this.transform.position = new Vector3(pos.x, pos.y + 2.5f, pos.z);
     }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

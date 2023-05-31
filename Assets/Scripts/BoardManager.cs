@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
-[ExecuteInEditMode]
+
 public class BoardManager : NetworkBehaviour
 {
     //SINGLETON
@@ -16,8 +16,6 @@ public class BoardManager : NetworkBehaviour
     [SerializeField] private TileCube _tilePrefab;
     [SerializeField] private GameObject allTiles;
 
-    // PROBLEM: Этот массив не заполняется у клиента
-    // из-за этого клиент не может получить тайл через GetTileAtPosition
     private Dictionary<Vector2Int, TileCube> _tiles;
 
     public NetworkVariable<bool> isFilled = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
@@ -53,7 +51,6 @@ public class BoardManager : NetworkBehaviour
         if (IsServer)
             GenerateGridServerRpc();
     }
-
     [ServerRpc]
     private void GenerateGridServerRpc()
     {
@@ -73,7 +70,6 @@ public class BoardManager : NetworkBehaviour
         }
         isFilled.Value = true;
     }
-
     [ClientRpc]
     public void FillTilesDictionaryClientRpc()
     {

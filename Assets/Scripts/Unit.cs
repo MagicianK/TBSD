@@ -246,8 +246,7 @@ public class Unit : NetworkBehaviour
     }
     public void FindPath(TileCube tc, ref List<TileCube> path)
     {
-        if (!NetworkManager.LocalClient.PlayerObject.GetComponent<MouseController>().Equals(mouseController))
-            return;
+
         path = pathFinder.FindPath(standingOn, tc);
     }
     private void OnMouseDown()

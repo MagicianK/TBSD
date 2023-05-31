@@ -41,7 +41,7 @@ public class TileCube : NetworkBehaviour
         gameObject.GetComponent<MeshRenderer>().material = defaultMaterial;
     }
     
-    // Меняет позицию геймобъект курсор на этот куб, когда курсор мышки указывает на коллайдер куба
+    // Changes Cursor instance position to the tile cube x, z
     private void OnMouseEnter()
     {
         Cursor.instance.StateCursorAt(this.transform.position, coord.Value);

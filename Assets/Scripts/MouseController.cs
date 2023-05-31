@@ -43,11 +43,14 @@ namespace MouseStates
         public void Execute()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
+            {
                 stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
+                Debug.LogWarning("Exited");
+            }
         }
-
         public void Exit()
         {
+            stateOwner.playerBase.stateMachine.ChangeState(new PlayerBaseStates.Idle(stateOwner.playerBase));
         }
     }
 
@@ -80,13 +83,12 @@ namespace MouseStates
 
 public class MouseController : NetworkBehaviour
 {
-    // Server authorative base creation
-    // Create bases locally and then in a server 
 
     public StateMachine mouseStateMachine = new StateMachine();
     public Unit selectedUnit { get; set; }
     public NetworkVariable<int> team = new NetworkVariable<int>();
     public TileCube clickedTile;
+    public PlayerBase playerBase;
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
@@ -104,9 +106,6 @@ public class MouseController : NetworkBehaviour
     {
         if (!IsOwner)
             return;
-
-        if (Input.GetMouseButtonDown(0))
-            clickedTile = GetFocusedTile().Value.collider.gameObject.GetComponent<TileCube>();
         
         mouseStateMachine.Update();
     }
@@ -116,7 +115,7 @@ public class MouseController : NetworkBehaviour
     {
         this.team.Value = team;
     }
-    // Теперь эта функция не нужна думаю
+    // Is this function needed?
     public RaycastHit? GetFocusedTile()
     {
         RaycastHit hit;
@@ -128,7 +127,7 @@ public class MouseController : NetworkBehaviour
         return null;
     }
 
-    // Ноль референсов я не знаю
+    // Zero references
     public RaycastHit? GetFocusedUnit()
     {
         RaycastHit hit;
