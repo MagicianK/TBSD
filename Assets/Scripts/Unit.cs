@@ -58,11 +58,12 @@ namespace UnitStates
 
         public void Enter()
         {
-            BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn.coord.Value);
+            BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn);
         }
 
         public void Execute()
         {
+
             stateOwner.MoveAlongPath();
         }
 
@@ -128,7 +129,7 @@ namespace UnitStates
                     prey = hit.collider.gameObject.GetComponent<IDamagable>();
                 }
 
-                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.GetStandingOnTile())))
+                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.WhereAmI())))
                     stateOwner.stateMachine.ChangeState(new Attack(stateOwner, prey));
             }
         }
@@ -168,7 +169,8 @@ namespace UnitStates
                 List<TileCube> path = new List<TileCube>();
                 stateOwner.FindPath(tc, ref path);
                 stateOwner.path = path;
-                stateOwner.stateMachine.ChangeState(new Moving(stateOwner));
+                if(path.Count > 0)
+                    stateOwner.stateMachine.ChangeState(new Moving(stateOwner));
             }
         }
 
@@ -186,6 +188,7 @@ namespace UnitStates
 
         public void Enter()
         {
+            Debug.LogWarning("Owner is null?: " + (owner == null));
             SelectedView.instance.MoveTo(owner.transform.position);
         }
 
@@ -209,45 +212,42 @@ namespace UnitStates
 
 public class Unit : NetworkBehaviour
 {
+    const float MOVEMENT_ANIMATION_SPEED = 10f;
+
+    // Local data
     public PlayerBase owner;
     public StateMachine stateMachine = new StateMachine();
-    public int team;
-    public TileCube standingOn { get; set; }
+    public Vector2Int standingOn;
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
-    public RangeFinder rangeFinder = new RangeFinder();
     public PathFinder pathFinder;
+    public int team;
+    
+    
     [SerializeField]
-    private UnitData unitData;
-    public MouseController mouseController;
-    public int maxHealth;
-    private Color startColor;
-    private const float MOVEMENT_ANIMATION_SPEED = 10f;
-
-    public void InitValues(int team, PlayerBase owner, MouseController mouseController)
+    public UnitData unitData;
+    MouseController mouseController;
+    Color startColor;
+    HealthSystem healthSystem;
+    public void InitValues(Vector2Int pos)
     {
-        this.team = team;
-        this.owner = owner;
-        this.mouseController = mouseController;
+        standingOn = pos;
     }
-
-    private void Awake()
-    {
-        
-    }
-
     private void Start()
     {
+        
+        healthSystem = GetComponent<HealthSystem>();
         pathFinder = new PathFinder();
         path = new List<TileCube>();
         startColor = GetComponentInChildren<Renderer>().material.color;
-        maxHealth = unitData.Health;
         inRangeTiles = new List<TileCube>();
+        if (IsOwner)
+            mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
     }
     public void FindPath(TileCube tc, ref List<TileCube> path)
     {
 
-        path = pathFinder.FindPath(standingOn, tc);
+        path = pathFinder.FindPath(inRangeTiles, BoardManager.instance.GetTileAtPosition(standingOn), tc);
     }
     private void OnMouseDown()
     {
@@ -274,10 +274,17 @@ public class Unit : NetworkBehaviour
 
     private void Update()
     {
+        
+    }
+    private void FixedUpdate() {
         stateMachine.Update();
     }
 
-    
+    [ServerRpc]
+    public void DestroyServerRpc()
+    {
+        NetworkObject.Despawn();
+    }
     public override void OnNetworkDespawn()
     {
         owner.units.Remove(this);
@@ -295,7 +302,6 @@ public class Unit : NetworkBehaviour
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
-
         var step = MOVEMENT_ANIMATION_SPEED * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
@@ -309,9 +315,9 @@ public class Unit : NetworkBehaviour
         }
         if (path.Count == 1)
         {
-            standingOn = path[0];
+            standingOn = path[0].coord.Value;
             //standingOn.unit = this;
-            BoardManager.instance.BlockTileServerRpc(standingOn.coord.Value);
+            BoardManager.instance.BlockTileServerRpc(standingOn);
         }
         if (path.Count == 0)
         {
@@ -325,6 +331,7 @@ public class Unit : NetworkBehaviour
     // This is inappropriate and ugly way to do this due to side effect of function, but at least it works
     public List<TileCube> GetInRangeTiles()
     {
+
         foreach (var item in inRangeTiles)
         {
             if (item.gameObject.layer != LayerMask.NameToLayer("Hover"))
@@ -333,7 +340,8 @@ public class Unit : NetworkBehaviour
 
         //RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
         //inRangeTiles = tempList;
-        inRangeTiles = rangeFinder.GetTilesRange(standingOn.coord.Value, unitData.MovementRange);
+        inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
+        
         //inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
         foreach (var item in inRangeTiles)
         {
@@ -347,5 +355,10 @@ public class Unit : NetworkBehaviour
     public void PositionCharacterOnTile(TileCube tile)
     {
         transform.position = new Vector3(tile.transform.position.x, tile.transform.position.y, tile.transform.position.z);
+    }
+
+    public TileCube WhereAmI()
+    {
+        return BoardManager.instance.GetTileAtPosition(standingOn);
     }
 }

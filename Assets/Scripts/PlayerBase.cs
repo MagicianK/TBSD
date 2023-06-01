@@ -44,7 +44,7 @@ namespace PlayerBaseStates
                 //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
                 //Debug.Log("Checking if owner is null " + stateOwner.location2D.Value);
                 //RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
-                List<TileCube> tiles = stateOwner.rangeFinder.GetTilesRange(stateOwner.standingOn.Value, 1);
+                List<TileCube> tiles = RangeFinder.GetTilesRange(stateOwner.standingOn.Value, 1);
 
                 foreach (var tile in tiles)
                 {
@@ -52,7 +52,9 @@ namespace PlayerBaseStates
                     if (tile && !tile.isBlocked.Value)
                     {
                         Debug.Log("Creating Unit");
+                        BoardManager.instance.BlockTileServerRpc(tile.coord.Value);
                         stateOwner.CreateUnitServerRpc(tile.coord.Value, stateOwner.OwnerClientId);
+                        
                         break;
                     }
                 }
@@ -73,7 +75,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public int team;
     public StateMachine stateMachine = new StateMachine();
     [SerializeField]
-    private UnitData unitData;
+    public UnitData unitData;
 
     public MouseController mouseController;
     public List<Unit> units;
@@ -103,13 +105,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     {
         if (!mouseController)
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
-        stateMachine.Update();
-        //if (GameManager.instance.turnSystem == null)
-        //{
-        //    return;
-        //}
+  
 
-        // TODO: Turn Manager
+        // TODO: Connect with TurnManager
         if (false)
         {
             foreach (Unit unit in units)
@@ -128,10 +126,12 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
             }
         }
     }
-
-    private void OnDestroy()
+    private void FixedUpdate() {
+        stateMachine.Update();
+    }
+    public override void OnNetworkDespawn()
     {
-        Debug.Log($"Player {this.team - 1}");
+        Debug.Log($"Player {(this.team == 1 ? 0 : 1)} won!!!");
     }
 
     public Vector2Int GetStandingOnTile()
@@ -154,52 +154,32 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     [ServerRpc(RequireOwnership = false)]
     public void CreateUnitServerRpc(Vector2Int pos, ulong clientId)
     {
-        if (BoardManager.instance.GetTileAtPosition(pos))
-        {
-            TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
-            CreateUnit(tileCube, clientId);
-        }
-        else
-        {
-            Debug.Log("Position does not exist!");
-        }
-    }
-
-    [ClientRpc]
-    public void CreateUnitClientRpc(Vector2Int pos)
-    {
-        if (BoardManager.instance.GetTileAtPosition(pos))
-        {
-            TileCube tileCube = BoardManager.instance.GetTileAtPosition(pos);
-            CreateUnit(tileCube, NetworkManager.LocalClientId);
-        }
-        else
-        {
-            Debug.Log("Position does not exist!");
-        }
-    }
-
-   
-    // Страшное мессиво
-    public void CreateUnit(TileCube tileCube, ulong clientId)
-    {
         GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
-     
-        Debug.LogWarning("Spawned with ownership for " + clientId);
+        unitToPlace.GetComponent<Unit>().NetworkObject.SpawnWithOwnership(clientId);
 
-        unitToPlace.GetComponent<Unit>().standingOn = tileCube;
-        BoardManager.instance.BlockTileServerRpc(tileCube.coord.Value);
-        unitToPlace.transform.position = tileCube.transform.position;
+        CreateUnitClientRpc(pos, unitToPlace.GetComponent<Unit>().NetworkObject.NetworkObjectId);
 
-        // mouseController is given to unit here
-        // but it work surely given only to the server side.
-        // In the client unit does not have mouseController
-        unitToPlace.GetComponent<Unit>().InitValues(this.team, this, mouseController);
-        mouseController.selectedUnit = unitToPlace.GetComponent<Unit>();
-        units.Add(unitToPlace.GetComponent<Unit>());
-        if (IsServer)
-            unitToPlace.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+    }
+    [ClientRpc]
+    public void CreateUnitClientRpc(Vector2Int pos, ulong networkId)
+    {
+        CreateUnit(pos, networkId);
+    }   
 
+    public void CreateUnit(Vector2Int pos, ulong networkId)
+    {
+        Unit unitCreation = null;
+        Unit[] units = FindObjectsOfType<Unit>();
+        foreach (Unit unit in units)
+        {
+            if(unit.NetworkObjectId == networkId)
+                unitCreation = unit;
+        }
+        unitCreation.InitValues(pos);
+        unitCreation.gameObject.transform.position = BoardManager.instance.GetTileAtPosition(pos).transform.position;
+        unitCreation.team = this.team;
+        mouseController.selectedUnit = unitCreation;
+        this.units.Add(unitCreation);
     }
 
     private void OnMouseDown()
@@ -225,5 +205,10 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     private void OnMouseExit()
     {
         GetComponentInChildren<Renderer>().material.color = startColor;
+    }
+
+    public Vector2Int WhereAmI()
+    {
+        return standingOn.Value;
     }
 }

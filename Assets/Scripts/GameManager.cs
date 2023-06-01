@@ -4,8 +4,8 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Тут только эти классы и интейрфейсы нужны 
-// Сам скрипт не соответсвтует своему предназначению
+// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
+// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 public interface IState
 {
     public void Enter();
@@ -15,13 +15,12 @@ public interface IState
     public void Exit();
 }
 
+
 public interface IDamagable
 {
     public void TakeDamage(int damage);
-
-    public Vector2Int GetStandingOnTile();
-
     public int GetPreyTeam();
+    public Vector2Int WhereAmI();
 }
 
 public interface IHealable

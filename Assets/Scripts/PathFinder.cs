@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class PathFinder : MonoBehaviour
+public class PathFinder
 {
 
-    public List<TileCube> FindPath(TileCube start, TileCube end)
+    public List<TileCube> FindPath(List<TileCube> InRange, TileCube start, TileCube end)
     {
         List<TileCube> openList = new List<TileCube>();
         List<TileCube> closedList = new List<TileCube>();
@@ -29,7 +29,9 @@ public class PathFinder : MonoBehaviour
             foreach (var neighbour in neighbourTiles)
             {
                 if (neighbour.isBlocked.Value ||
-                closedList.Contains(neighbour))
+                closedList.Contains(neighbour) || 
+                !InRange.Contains(neighbour)
+                )
                 {
                     continue;
                 }

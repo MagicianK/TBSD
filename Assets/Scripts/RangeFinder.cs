@@ -7,7 +7,7 @@ using UnityEngine;
 public class RangeFinder
 {
 
-    public List<TileCube> GetTilesRange(Vector2Int startingTile, int range)
+    public static List<TileCube> GetTilesRange(Vector2Int startingTile, int range)
     {
         TileCube startTile = BoardManager.instance.GetTileAtPosition(startingTile);
         var inRangeTiles = new List<TileCube>();

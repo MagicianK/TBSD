@@ -6,6 +6,10 @@ using Unity.Netcode;
 // Waits for player connect and creates player bases for all players
 public class Waiter : NetworkBehaviour
 {
+    public const int BASE1_X = 0;
+    public const int BASE1_Y = 10;
+    public const int BASE2_X = 39;
+    public const int BASE2_Y = 10;
     private BaseFactory1 baseFactory1;
     private BaseFactory2 baseFactory2;
 
@@ -34,12 +38,11 @@ public class Waiter : NetworkBehaviour
         IReadOnlyList<NetworkClient> clients = NetworkManager.Singleton.ConnectedClientsList;
         if (clients.Count == 2)
         {
-            playerBase1 = (PlayerBase)baseFactory1.GetProduct(new Vector2Int(1, 5), clients[0].ClientId);
-            playerBase2 = (PlayerBase)baseFactory2.GetProduct(new Vector2Int(5, 5), clients[1].ClientId);
+            playerBase1 = (PlayerBase)baseFactory1.GetProduct(new Vector2Int(BASE1_X, BASE1_Y), clients[0].ClientId);
+            playerBase2 = (PlayerBase)baseFactory2.GetProduct(new Vector2Int(BASE2_X, BASE2_Y), clients[1].ClientId);
 
             playerBase1.team = clients[0].PlayerObject.GetComponent<MouseController>().team.Value;
             playerBase2.team = clients[1].PlayerObject.GetComponent<MouseController>().team.Value;
-
             this.enabled = false;
         }
     }

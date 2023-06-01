@@ -81,8 +81,8 @@ public class BoardManager : NetworkBehaviour
         Debug.Log("Filled!");
     }
 
-    // Убирает блокировку у тайла
-    [ServerRpc]
+  
+    [ServerRpc(RequireOwnership = false)]
     public void UnblockTileServerRpc(Vector2Int coord)
     {
         if (!IsOwner)
@@ -90,15 +90,16 @@ public class BoardManager : NetworkBehaviour
         _tiles[coord].isBlocked.Value = false;
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void BlockTileServerRpc(Vector2Int coord)
     {
-        if (!IsOwner)
-            return;
         _tiles[coord].isBlocked.Value = true;
-        //BlockTileClientRpc(coord);
     }
-
+    // [ClientRpc]
+    // public void BlockTileClientRpc(Vector2Int coord)
+    // {
+    //     _tiles[coord].isBlocked.Value = true;
+    // }
     public TileCube GetTileAtPosition(Vector2Int pos)
     {
         if (_tiles.TryGetValue(pos, out var tile)) return tile;
