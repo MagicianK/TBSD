@@ -78,7 +78,6 @@ public class BoardManager : NetworkBehaviour
         {
             _tiles[tileCube.coord.Value] = tileCube;
         }
-        Debug.Log("Filled!");
     }
 
   
@@ -116,7 +115,6 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
-            Debug.Log("Added top tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -125,7 +123,6 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
-            Debug.Log("Added bottom tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -134,7 +131,6 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
-            Debug.Log("Added right tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 
@@ -143,7 +139,6 @@ public class BoardManager : NetworkBehaviour
 
         if (_tiles.ContainsKey(locationToCheck))
         {
-            Debug.Log("Added left tile");
             neighbours.Add(_tiles[locationToCheck]);
         }
 

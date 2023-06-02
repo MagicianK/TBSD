@@ -79,6 +79,8 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public MouseController mouseController;
     public List<Unit> units;
+    
+    // ! Needs to be NetworkVariable
     private int health;
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
@@ -105,7 +107,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     {
         if (!mouseController)
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
-  
+        stateMachine.Update();
 
         // TODO: Connect with TurnManager
         if (false)
@@ -121,14 +123,16 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         {
             foreach (Unit unit in units)
             {
+                if(unit == null){
+                    units.Remove(unit);
+                    continue;
+                }
                 unit.GetComponent<Unit>().enabled = true;
                 unit.GetComponentInChildren<Renderer>().material.color = startColor;
             }
         }
     }
-    private void FixedUpdate() {
-        stateMachine.Update();
-    }
+
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team == 1 ? 0 : 1)} won!!!");
@@ -144,6 +148,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         return this.team;
     }
 
+    // ! Needs to be network synchronized
     public void TakeDamage(int damage)
     {
         this.health -= damage;

@@ -58,7 +58,7 @@ namespace UnitStates
 
         public void Enter()
         {
-            BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn);
+            BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn.Value);
         }
 
         public void Execute()
@@ -127,9 +127,14 @@ namespace UnitStates
                 if (Physics.Raycast(ray, out hit))
                 {
                     prey = hit.collider.gameObject.GetComponent<IDamagable>();
+                    Debug.LogWarning("Where Am I: " + prey.WhereAmI());
+                    Debug.LogWarning("Prey team: " + prey.GetPreyTeam());
+                    Debug.LogWarning("Prey: " + prey);
                 }
 
-                if (prey != null && prey.GetPreyTeam() != stateOwner.team && stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.WhereAmI())))
+                if (prey != null && 
+                    //prey.GetPreyTeam() != stateOwner.team && 
+                    stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.WhereAmI())))
                     stateOwner.stateMachine.ChangeState(new Attack(stateOwner, prey));
             }
         }
@@ -217,7 +222,7 @@ public class Unit : NetworkBehaviour
     // Local data
     public PlayerBase owner;
     public StateMachine stateMachine = new StateMachine();
-    public Vector2Int standingOn;
+    public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
     public PathFinder pathFinder;
@@ -229,9 +234,11 @@ public class Unit : NetworkBehaviour
     MouseController mouseController;
     Color startColor;
     HealthSystem healthSystem;
+
+
     public void InitValues(Vector2Int pos)
     {
-        standingOn = pos;
+        ChangePositionServerRpc(this, pos);
     }
     private void Start()
     {
@@ -247,7 +254,7 @@ public class Unit : NetworkBehaviour
     public void FindPath(TileCube tc, ref List<TileCube> path)
     {
 
-        path = pathFinder.FindPath(inRangeTiles, BoardManager.instance.GetTileAtPosition(standingOn), tc);
+        path = pathFinder.FindPath(inRangeTiles, BoardManager.instance.GetTileAtPosition(standingOn.Value), tc);
     }
     private void OnMouseDown()
     {
@@ -274,20 +281,18 @@ public class Unit : NetworkBehaviour
 
     private void Update()
     {
-        
-    }
-    private void FixedUpdate() {
         stateMachine.Update();
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void DestroyServerRpc()
     {
+        Destroy(gameObject);
         NetworkObject.Despawn();
     }
     public override void OnNetworkDespawn()
     {
-        owner.units.Remove(this);
+        Debug.Log("Ive been Destroyed");
     }
 
     // Clears range of attack or movement
@@ -298,7 +303,13 @@ public class Unit : NetworkBehaviour
             item.ChangeLayer(LayerMask.NameToLayer("Tile"));
         }
     }
-
+    
+    [ServerRpc]
+    public void ChangePositionServerRpc(NetworkBehaviourReference nbr, Vector2Int pos)
+    {
+        if(nbr.TryGet<Unit>(out Unit unit))
+            unit.standingOn.Value = pos;
+    }
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
@@ -315,9 +326,9 @@ public class Unit : NetworkBehaviour
         }
         if (path.Count == 1)
         {
-            standingOn = path[0].coord.Value;
+            ChangePositionServerRpc(this, path[0].coord.Value);
             //standingOn.unit = this;
-            BoardManager.instance.BlockTileServerRpc(standingOn);
+            BoardManager.instance.BlockTileServerRpc(standingOn.Value);
         }
         if (path.Count == 0)
         {
@@ -340,7 +351,7 @@ public class Unit : NetworkBehaviour
 
         //RangeFinder.GetTilesRangeServerRpc(standingOn.grid2DLocation, unitData.MovementRange, out List<TileCube> tempList);
         //inRangeTiles = tempList;
-        inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
+        inRangeTiles = RangeFinder.GetTilesRange(standingOn.Value, unitData.MovementRange);
         
         //inRangeTiles = RangeFinder.GetTilesRange(standingOn, unitData.MovementRange);
         foreach (var item in inRangeTiles)
@@ -359,6 +370,6 @@ public class Unit : NetworkBehaviour
 
     public TileCube WhereAmI()
     {
-        return BoardManager.instance.GetTileAtPosition(standingOn);
+        return BoardManager.instance.GetTileAtPosition(standingOn.Value);
     }
 }

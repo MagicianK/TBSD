@@ -3,36 +3,51 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
-public class HealthSystem : MonoBehaviour, IDamagable
+public class HealthSystem : NetworkBehaviour, IDamagable
 {
-    private int health;
+    public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     Unit unit;
-
+    [ServerRpc]
+    public void SetHealthServerRpc()
+    {
+        health.Value = unit.unitData.Health;
+    }
     private void Start() {
         if(TryGetComponent<Unit>(out Unit unit))
             this.unit = unit;
         
-        health = unit.unitData.Health;
+        SetHealthServerRpc();
     }
-    public void TakeDamage(int damage){
-        this.health -= damage;
+
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeDamageServerRpc(int damage){
+        this.health.Value -= damage;
         if (IsDead()){
             unit.DestroyServerRpc();
         }
     }
-
+    public void TakeDamage(int damage)
+    {
+        TakeDamageServerRpc(damage);
+    }
     public bool IsDead()
     {
-        return this.health <= 0;
+        return this.health.Value <= 0;
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeHealServerRpc(int heal)
+    {
+        this.health.Value += heal;
+        if(this.health.Value > unit.unitData.Health)
+            this.health.Value = unit.unitData.Health;
+    }
     public void TakeHeal(int heal)
     {
-        this.health += heal;
-        if(this.health > unit.unitData.Health)
-            this.health = unit.unitData.Health;
+        TakeHealServerRpc(heal);
     }
 
+    
     public int GetPreyTeam()
     {
         return unit.team;
@@ -40,6 +55,6 @@ public class HealthSystem : MonoBehaviour, IDamagable
 
     public Vector2Int WhereAmI()
     {
-        return unit.standingOn;
+        return unit.standingOn.Value;
     }
 }
