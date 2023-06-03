@@ -50,7 +50,7 @@ public class HealthSystem : NetworkBehaviour, IDamagable
     
     public int GetPreyTeam()
     {
-        return unit.team;
+        return unit.team.Value;
     }
 
     public Vector2Int WhereAmI()

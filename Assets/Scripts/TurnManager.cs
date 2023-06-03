@@ -29,12 +29,12 @@ public class TurnManager : NetworkBehaviour
         }
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void StartTurnServerRpc()
     {
         turns.Value -= 1;
     }
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void EndTurnServerRpc()
     {
         Debug.Log("Made turn");

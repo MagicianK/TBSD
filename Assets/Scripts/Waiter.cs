@@ -41,8 +41,8 @@ public class Waiter : NetworkBehaviour
             playerBase1 = (PlayerBase)baseFactory1.GetProduct(new Vector2Int(BASE1_X, BASE1_Y), clients[0].ClientId);
             playerBase2 = (PlayerBase)baseFactory2.GetProduct(new Vector2Int(BASE2_X, BASE2_Y), clients[1].ClientId);
 
-            playerBase1.team = clients[0].PlayerObject.GetComponent<MouseController>().team.Value;
-            playerBase2.team = clients[1].PlayerObject.GetComponent<MouseController>().team.Value;
+            playerBase1.SetTeamServerRpc(0);
+            playerBase2.SetTeamServerRpc(1);
             this.enabled = false;
         }
     }

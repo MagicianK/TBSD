@@ -72,7 +72,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public Unit unit1prefab;
     public Unit unit2prefab;
     public Unit unit3prefab;
-    public int team;
+    public NetworkVariable<int> team = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     public StateMachine stateMachine = new StateMachine();
     [SerializeField]
     public UnitData unitData;
@@ -105,15 +105,23 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     private void Update()
     {
-        if (!mouseController)
+        // ! Temporary solution
+        // ? how to assign mouseController to it in a better way?
+        if (!mouseController){
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
-        stateMachine.Update();
 
+        }
+        stateMachine.Update();
+        
         // TODO: Connect with TurnManager
-        if (false)
+        if (TurnManager.instance.currentTeam.Value != this.team.Value)
         {
             foreach (Unit unit in units)
             {
+                if(unit == null){
+                    units.Remove(unit);
+                    continue;
+                }
                 unit.stateMachine.ChangeState(new UnitStates.Idle(unit));
                 unit.GetComponent<Unit>().enabled = false;
                 unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
@@ -135,7 +143,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public override void OnNetworkDespawn()
     {
-        Debug.Log($"Player {(this.team == 1 ? 0 : 1)} won!!!");
+        Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
+        if(IsServer)
+            NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Additive);
     }
 
     public Vector2Int GetStandingOnTile()
@@ -145,7 +155,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public int GetPreyTeam()
     {
-        return this.team;
+        return this.team.Value;
     }
 
     // ! Needs to be network synchronized
@@ -182,11 +192,15 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         }
         unitCreation.InitValues(pos);
         unitCreation.gameObject.transform.position = BoardManager.instance.GetTileAtPosition(pos).transform.position;
-        unitCreation.team = this.team;
+        unitCreation.team.Value = team.Value;
         mouseController.selectedUnit = unitCreation;
         this.units.Add(unitCreation);
     }
-
+    [ServerRpc(RequireOwnership = false)]
+    public void SetTeamServerRpc(int team)
+    {
+        this.team.Value = team;
+    }
     private void OnMouseDown()
     {
         if (!IsOwner)

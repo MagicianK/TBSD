@@ -115,27 +115,4 @@ public class MouseController : NetworkBehaviour
     {
         this.team.Value = team;
     }
-    // Is this function needed?
-    public RaycastHit? GetFocusedTile()
-    {
-        RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit, LayerMask.GetMask("Tile")))
-        {
-            return hit;
-        }
-        return null;
-    }
-
-    // Zero references
-    public RaycastHit? GetFocusedUnit()
-    {
-        RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit, LayerMask.GetMask("Unit")))
-        {
-            return hit;
-        }
-        return null;
-    }
 }

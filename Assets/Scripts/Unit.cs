@@ -59,6 +59,7 @@ namespace UnitStates
         public void Enter()
         {
             BoardManager.instance.UnblockTileServerRpc(stateOwner.standingOn.Value);
+            TurnManager.instance.StartTurnServerRpc();
         }
 
         public void Execute()
@@ -69,6 +70,7 @@ namespace UnitStates
 
         public void Exit()
         {
+            TurnManager.instance.EndTurnServerRpc();
             Debug.Log("Stopped moving");
             //GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
@@ -133,7 +135,7 @@ namespace UnitStates
                 }
 
                 if (prey != null && 
-                    //prey.GetPreyTeam() != stateOwner.team && 
+                    prey.GetPreyTeam() != stateOwner.team.Value && 
                     stateOwner.inRangeTiles.Contains(BoardManager.instance.GetTileAtPosition(prey.WhereAmI())))
                     stateOwner.stateMachine.ChangeState(new Attack(stateOwner, prey));
             }
@@ -151,7 +153,7 @@ namespace UnitStates
 
         public PrepareToMove(Unit stateOwner)
         { this.stateOwner = stateOwner; }
-
+        
         public void Enter()
         {
             stateOwner.GetInRangeTiles();
@@ -199,6 +201,7 @@ namespace UnitStates
 
         public void Execute()
         {
+            
             if (Input.GetKeyDown(KeyCode.M))
             {
                 owner.stateMachine.ChangeState(new PrepareToMove(owner));
@@ -226,7 +229,7 @@ public class Unit : NetworkBehaviour
     public List<TileCube> path { get; set; }
     public List<TileCube> inRangeTiles { get; private set; }
     public PathFinder pathFinder;
-    public int team;
+    public NetworkVariable<int> team = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     
     
     [SerializeField]
@@ -269,6 +272,11 @@ public class Unit : NetworkBehaviour
         }
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void SetTeamServerRpc(int team)
+    {
+        this.team.Value = team;
+    }
     private void OnMouseEnter()
     {
         GetComponentInChildren<Renderer>().material.color = Color.white;
@@ -304,7 +312,7 @@ public class Unit : NetworkBehaviour
         }
     }
     
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void ChangePositionServerRpc(NetworkBehaviourReference nbr, Vector2Int pos)
     {
         if(nbr.TryGet<Unit>(out Unit unit))
