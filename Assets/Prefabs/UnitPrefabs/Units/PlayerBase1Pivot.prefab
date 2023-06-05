@@ -47,8 +47,8 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.4530995
-  m_Center: {x: -0.00033307076, y: 0.51490235, z: 0.024674892}
+  m_Radius: 0.7296773
+  m_Center: {x: -0.005180478, y: 0.6949729, z: 0.0172773}
 --- !u!114 &71795539340236867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,14 +62,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unit1prefab: {fileID: 8906848788069213801, guid: 7848f2251d63be04c89315500863403b, type: 3}
-  unit2prefab: {fileID: 0}
-  unit3prefab: {fileID: 0}
-  team: 0
-  points: 5000
-  unitToPlace: {fileID: 0}
+  unit2prefab: {fileID: 8906848788069213801, guid: d11eba8b086f8bc48bf997c39a124cee, type: 3}
+  unit3prefab: {fileID: 8906848788069213801, guid: 8b211384c5a5d05488090856638d4a20, type: 3}
+  team:
+    m_InternalValue: 0
   unitData: {fileID: 11400000, guid: 6244adde17c4bb940ba5fb56aecff51d, type: 2}
+  mouseController: {fileID: 0}
   units: []
-  standingOn: {fileID: 0}
+  health:
+    m_InternalValue: 0
+  _healthBar: {fileID: 0}
+  standingOn:
+    m_InternalValue: {x: 0, y: 0}
 --- !u!114 &1538597859714379951
 MonoBehaviour:
   m_ObjectHideFlags: 0

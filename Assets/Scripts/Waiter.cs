@@ -15,7 +15,6 @@ public class Waiter : NetworkBehaviour
 
     private PlayerBase playerBase1;
     private PlayerBase playerBase2;
-    private bool isBasesCreated = false;
 
     private void Start()
     {

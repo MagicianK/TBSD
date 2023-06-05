@@ -32,18 +32,20 @@ public class TurnManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void StartTurnServerRpc()
     {
+        if(!IsOwner)
+            return;
         turns.Value -= 1;
     }
     [ServerRpc(RequireOwnership = false)]
     public void EndTurnServerRpc()
     {
+        if(!IsOwner)
+            return;
         Debug.Log("Made turn");
         if (turns.Value <= 0)
         {
             currentTeam.Value = (currentTeam.Value == 0) ? 1 : 0;
             turns.Value = maxTurns;
-            text.text = "Team Turn: " + currentTeam;
-            //MouseController.instance.mouseStateMachine.ChangeState(new MouseStates.Idle()); 
         }
     }
 }

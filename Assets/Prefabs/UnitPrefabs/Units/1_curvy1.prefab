@@ -48,8 +48,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.3864005, y: 0.8860853, z: 1}
-  m_Center: {x: 0.013854384, y: 0.6046041, z: 0}
+  m_Size: {x: 1.3864005, y: 0.7218582, z: 1}
+  m_Center: {x: 0.013854384, y: 1.0772258, z: 0}
 --- !u!114 &8906848788069213801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,9 +63,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   owner: {fileID: 0}
-  team: 0
+  standingOn:
+    m_InternalValue: {x: 0, y: 0}
+  team:
+    m_InternalValue: 0
   unitData: {fileID: 11400000, guid: e4e18ccd464212c44bd13dc43e8b5113, type: 2}
-  maxHealth: 0
 --- !u!114 &-6845515840820977398
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -78,6 +80,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3add3a0572d16e345a5082f59d168377, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  health:
+    m_InternalValue: 0
 --- !u!114 &4869744808355367568
 MonoBehaviour:
   m_ObjectHideFlags: 0

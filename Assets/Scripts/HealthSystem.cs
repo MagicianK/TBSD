@@ -7,7 +7,7 @@ public class HealthSystem : NetworkBehaviour, IDamagable
 {
     public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     Unit unit;
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     public void SetHealthServerRpc()
     {
         health.Value = unit.unitData.Health;

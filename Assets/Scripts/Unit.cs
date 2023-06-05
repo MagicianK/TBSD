@@ -167,6 +167,8 @@ namespace UnitStates
                 TileCube tc = BoardManager.instance.GetTileAtPosition(Cursor.instance.coord);
                 CanIgoThere(tc);
             }
+            if(Input.GetKeyDown(KeyCode.Escape))
+                stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
         }
 
         private void CanIgoThere(TileCube tc)
@@ -185,7 +187,29 @@ namespace UnitStates
         {
         }
     }
-
+    public class OnAbilityState : IState
+    {
+        Unit stateOwner;
+    
+        public OnAbilityState(Unit stateOwner) { this.stateOwner = stateOwner; }
+        
+        public void Enter()
+        {
+            stateOwner.ability.Activate(stateOwner);
+        }
+    
+        public void Execute()
+        {
+            if(Input.GetKeyDown(KeyCode.Escape))
+                stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
+                
+        }
+    
+        public void Exit()
+        {
+            stateOwner.ability.Deactivate();
+        }
+    }
     public class Selected : IState
     {
         private Unit owner;
@@ -210,6 +234,10 @@ namespace UnitStates
             {
                 owner.stateMachine.ChangeState(new InCharge(owner));
             }
+            else if (Input.GetKeyDown(KeyCode.S))
+            {
+                owner.stateMachine.ChangeState(new OnAbilityState(owner));
+            }
         }
 
         public void Exit()
@@ -218,7 +246,7 @@ namespace UnitStates
     }
 }
 
-public class Unit : NetworkBehaviour
+public class Unit : NetworkBehaviour, ISwitchable
 {
     const float MOVEMENT_ANIMATION_SPEED = 10f;
 
@@ -230,7 +258,7 @@ public class Unit : NetworkBehaviour
     public List<TileCube> inRangeTiles { get; private set; }
     public PathFinder pathFinder;
     public NetworkVariable<int> team = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
-    
+    public IAbility ability;
     
     [SerializeField]
     public UnitData unitData;
@@ -241,11 +269,11 @@ public class Unit : NetworkBehaviour
 
     public void InitValues(Vector2Int pos)
     {
-        ChangePositionServerRpc(this, pos);
+        ChangePositionServerRpc(pos);
     }
     private void Start()
     {
-        
+        ability = GetComponent<IAbility>();
         healthSystem = GetComponent<HealthSystem>();
         pathFinder = new PathFinder();
         path = new List<TileCube>();
@@ -313,10 +341,9 @@ public class Unit : NetworkBehaviour
     }
     
     [ServerRpc(RequireOwnership = false)]
-    public void ChangePositionServerRpc(NetworkBehaviourReference nbr, Vector2Int pos)
+    public void ChangePositionServerRpc(Vector2Int pos)
     {
-        if(nbr.TryGet<Unit>(out Unit unit))
-            unit.standingOn.Value = pos;
+        standingOn.Value = pos;
     }
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
@@ -334,7 +361,7 @@ public class Unit : NetworkBehaviour
         }
         if (path.Count == 1)
         {
-            ChangePositionServerRpc(this, path[0].coord.Value);
+            ChangePositionServerRpc(path[0].coord.Value);
             //standingOn.unit = this;
             BoardManager.instance.BlockTileServerRpc(standingOn.Value);
         }
@@ -379,5 +406,22 @@ public class Unit : NetworkBehaviour
     public TileCube WhereAmI()
     {
         return BoardManager.instance.GetTileAtPosition(standingOn.Value);
+    }
+
+    public int GetPreyTeam()
+    {
+        return team.Value;
+    }
+
+    public Vector2Int GetStandingOnTile()
+    {
+        return standingOn.Value;
+    }
+
+    public void Switch(Vector2Int dest)
+    {
+        ChangePositionServerRpc(dest);
+        TileCube tile = BoardManager.instance.GetTileAtPosition(dest);
+        transform.position = new Vector3(tile.transform.position.x, this.transform.position.y, tile.transform.position.z);
     }
 }

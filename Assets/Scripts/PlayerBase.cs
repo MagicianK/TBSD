@@ -39,11 +39,8 @@ namespace PlayerBaseStates
 
         public void Execute()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1))
-            {
-                //Debug.Log("Base standing on: " + owner.GetStandingOnTile().gridLocation);
-                //Debug.Log("Checking if owner is null " + stateOwner.location2D.Value);
-                //RangeFinder.GetTilesRangeServerRpc(owner.location2D.Value, 1, out List<TileCube> tiles);
+            void CreateUnit(int type)
+            {   
                 List<TileCube> tiles = RangeFinder.GetTilesRange(stateOwner.standingOn.Value, 1);
 
                 foreach (var tile in tiles)
@@ -53,11 +50,19 @@ namespace PlayerBaseStates
                     {
                         Debug.Log("Creating Unit");
                         BoardManager.instance.BlockTileServerRpc(tile.coord.Value);
-                        stateOwner.CreateUnitServerRpc(tile.coord.Value, stateOwner.OwnerClientId);
+                        stateOwner.CreateUnitServerRpc(tile.coord.Value, stateOwner.OwnerClientId, type);
                         
                         break;
                     }
                 }
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                CreateUnit(1);  
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                CreateUnit(2);
             }
         }
 
@@ -81,7 +86,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public List<Unit> units;
     
     // ! Needs to be NetworkVariable
-    private int health;
+    public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
+    [SerializeField]
+    private HealthBar _healthBar;
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
@@ -96,15 +103,20 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     private void Start()
     {
         if(IsOwner)
+            GetComponentInChildren<Renderer>().material.color = Color.blue;
+        else
             GetComponentInChildren<Renderer>().material.color = Color.red;
         stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
-        health = unitData.Health;
+        health.Value = unitData.Health;
+        _healthBar.UpdateHealthBar(unitData.Health, health.Value);
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
     }
 
     private void Update()
     {
+        if (!IsOwner)
+            return;
         // ! Temporary solution
         // ? how to assign mouseController to it in a better way?
         if (!mouseController){
@@ -113,7 +125,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         }
         stateMachine.Update();
         
-        // TODO: Connect with TurnManager
+        
         if (TurnManager.instance.currentTeam.Value != this.team.Value)
         {
             foreach (Unit unit in units)
@@ -126,6 +138,9 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
                 unit.GetComponent<Unit>().enabled = false;
                 unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
             }
+            if(!(mouseController is MouseStates.Idle))
+                mouseController.mouseStateMachine.ChangeState(new MouseStates.Idle(mouseController));
+            
         }
         else
         {
@@ -135,12 +150,14 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
                     units.Remove(unit);
                     continue;
                 }
+                
                 unit.GetComponent<Unit>().enabled = true;
                 unit.GetComponentInChildren<Renderer>().material.color = startColor;
             }
+            
         }
     }
-
+    
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
@@ -159,17 +176,36 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     }
 
     // ! Needs to be network synchronized
-    public void TakeDamage(int damage)
+    [ServerRpc(RequireOwnership = false)]
+    public void TakeDamageServerRpc(int damage)
     {
-        this.health -= damage;
-        if (this.health <= 0)
+        this.health.Value -= damage;
+        _healthBar.UpdateHealthBar(unitData.Health, this.health.Value);
+        if (this.health.Value <= 0)
             Destroy(gameObject);
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void CreateUnitServerRpc(Vector2Int pos, ulong clientId)
+    public void TakeDamage(int damage)
     {
-        GameObject unitToPlace = Instantiate(unit1prefab.gameObject);
+        TakeDamageServerRpc(damage);
+        _healthBar.UpdateHealthBar(unitData.Health, this.health.Value);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void CreateUnitServerRpc(Vector2Int pos, ulong clientId, int type)
+    {
+        GameObject unitToCreate = unit1prefab.gameObject;
+        switch(type)
+        {
+            case 1:
+                unitToCreate = unit1prefab.gameObject;
+            break;
+            case 2:
+                unitToCreate = unit2prefab.gameObject;
+            break;
+            case 3:
+                unitToCreate = unit3prefab.gameObject;
+            break;
+        }
+        GameObject unitToPlace = Instantiate(unitToCreate);
         unitToPlace.GetComponent<Unit>().NetworkObject.SpawnWithOwnership(clientId);
 
         CreateUnitClientRpc(pos, unitToPlace.GetComponent<Unit>().NetworkObject.NetworkObjectId);
@@ -218,11 +254,15 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     private void OnMouseEnter()
     {
+        if(!IsOwner)
+            return;
         GetComponentInChildren<Renderer>().material.color = Color.white;
     }
 
     private void OnMouseExit()
     {
+        if(!IsOwner)
+            return;
         GetComponentInChildren<Renderer>().material.color = startColor;
     }
 

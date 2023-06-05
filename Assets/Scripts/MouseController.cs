@@ -15,6 +15,7 @@ namespace MouseStates
         }
         public void Enter()
         {
+            Debug.LogWarning("IN IDLE");
             SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
         }
 
@@ -45,7 +46,7 @@ namespace MouseStates
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
-                Debug.LogWarning("Exited");
+                Debug.LogWarning("MOUSE IS IN IDLE STATE");
             }
         }
         public void Exit()
@@ -67,8 +68,12 @@ namespace MouseStates
 
         public void Execute()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            //!I think there is a problem
+            if (Input.GetKeyDown(KeyCode.Escape) && stateOwner.selectedUnit.stateMachine.currentState is UnitStates.Selected)
+            {
                 stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
+                Debug.LogWarning("MOUSE IS IN IDLE STATE");
+            }
         }
 
         public void Exit()
