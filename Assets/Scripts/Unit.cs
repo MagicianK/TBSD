@@ -70,9 +70,7 @@ namespace UnitStates
 
         public void Exit()
         {
-            TurnManager.instance.EndTurnServerRpc();
             Debug.Log("Stopped moving");
-            //GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
     }
@@ -387,9 +385,12 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
+        if(!IsOwner)
+            return;
         if (path.Count == 0)
         {
             Debug.Log("Path counted 0");
+            TurnManager.instance.EndTurnServerRpc();
             stateMachine.ChangeState(new UnitStates.Selected(this));
             return;
         }
