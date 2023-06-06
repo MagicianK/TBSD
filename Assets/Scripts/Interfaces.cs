@@ -5,7 +5,9 @@ public interface IDamagable
     public int GetPreyTeam();
     public Vector2Int WhereAmI();
 }
-
+public interface IPlaceable{
+    
+}
 public interface IHealable
 {
     public void TakeHeal(int heal);
@@ -20,4 +22,14 @@ public interface IAbility
 {
     public void Activate(Unit owner);
     public void Deactivate();
+}
+
+public interface ICanBeDisabled
+{
+    public bool isDisabled();
+    public void Disable();
+    public void Enable();
+    public int GetPreyTeam();
+    public Vector2Int WhereAmI();
+    public Vector2Int GetStandingOnTile();
 }

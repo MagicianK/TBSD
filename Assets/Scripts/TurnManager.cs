@@ -11,6 +11,7 @@ public class TurnManager : NetworkBehaviour
     public NetworkVariable<int> currentTeam = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     public const int maxTurns = 3;
     public NetworkVariable<int> turns = new NetworkVariable<int>(maxTurns, NetworkVariableReadPermission.Everyone);
+    public NetworkVariable<int> allTurns = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     public Text text;
 
     private static TurnManager _instance;
@@ -28,7 +29,18 @@ public class TurnManager : NetworkBehaviour
             _instance = this;
         }
     }
-
+    private void Start() {
+        currentTeam.OnValueChanged += OnTurnChanged;
+    }
+    void OnTurnChanged(int prev, int curr)
+    {
+        text.text = "Team turn: " + curr;
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void IncrementAllTurnsServerRpc()
+    {
+        allTurns.Value++;
+    }
     [ServerRpc(RequireOwnership = false)]
     public void StartTurnServerRpc()
     {
@@ -36,6 +48,7 @@ public class TurnManager : NetworkBehaviour
             return;
         turns.Value -= 1;
     }
+
     [ServerRpc(RequireOwnership = false)]
     public void EndTurnServerRpc()
     {
@@ -47,5 +60,6 @@ public class TurnManager : NetworkBehaviour
             currentTeam.Value = (currentTeam.Value == 0) ? 1 : 0;
             turns.Value = maxTurns;
         }
+        
     }
 }

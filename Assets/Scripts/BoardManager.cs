@@ -84,9 +84,8 @@ public class BoardManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void UnblockTileServerRpc(Vector2Int coord)
     {
-        if (!IsOwner)
-            return;
         _tiles[coord].isBlocked.Value = false;
+        Debug.LogWarning("Unblocked" + coord);
     }
 
     [ServerRpc(RequireOwnership = false)]

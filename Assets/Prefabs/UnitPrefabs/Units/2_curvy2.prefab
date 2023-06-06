@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -6845515840820977398}
   - component: {fileID: 4869744808355367568}
   - component: {fileID: 4811742631455826040}
+  - component: {fileID: 2645921378903006209}
   m_Layer: 0
   m_Name: 2_curvy2
   m_TagString: Untagged
@@ -66,6 +67,10 @@ MonoBehaviour:
   standingOn:
     m_InternalValue: {x: 0, y: 0}
   team:
+    m_InternalValue: 0
+  disabled:
+    m_InternalValue: 0
+  turnCoutner:
     m_InternalValue: 0
   unitData: {fileID: 11400000, guid: bd6d790bdfb36364f93fd8afea7326a3, type: 2}
 --- !u!114 &-6845515840820977398
@@ -124,6 +129,19 @@ MonoBehaviour:
   ScaleThreshold: 0.01
   InLocalSpace: 0
   Interpolate: 1
+--- !u!114 &2645921378903006209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3219905075132998754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efdd7e830c5218f4787b068a2d2989b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unit: {fileID: 0}
 --- !u!1001 &7748139512748415089
 PrefabInstance:
   m_ObjectHideFlags: 0

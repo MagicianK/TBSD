@@ -82,6 +82,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   health:
     m_InternalValue: 0
+  _healthBar: {fileID: 0}
 --- !u!114 &1119836617905978932
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -95,7 +95,7 @@ namespace UnitStates
 
         public void Execute()
         {
-            prey.TakeDamage(5);
+            prey.TakeDamage(4);
             stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
         }
 
@@ -246,7 +246,7 @@ namespace UnitStates
     }
 }
 
-public class Unit : NetworkBehaviour, ISwitchable
+public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
 {
     const float MOVEMENT_ANIMATION_SPEED = 10f;
 
@@ -259,7 +259,9 @@ public class Unit : NetworkBehaviour, ISwitchable
     public PathFinder pathFinder;
     public NetworkVariable<int> team = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public IAbility ability;
+    public NetworkVariable<bool> disabled = new NetworkVariable<bool>(default, NetworkVariableReadPermission.Everyone);
     
+    public NetworkVariable<int> turnCoutner = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
     [SerializeField]
     public UnitData unitData;
     MouseController mouseController;
@@ -281,6 +283,19 @@ public class Unit : NetworkBehaviour, ISwitchable
         inRangeTiles = new List<TileCube>();
         if (IsOwner)
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
+        if (IsOwner)
+            TurnManager.instance.currentTeam.OnValueChanged += OnTurnChanged;
+    }
+    void OnTurnChanged(int prev, int curr)
+    {
+        if(isDisabled() && turnCoutner.Value < 3)
+        {
+            IncrementTurnCounterServerRpc();
+        }
+        else{
+            Enable();
+            NullifyTurnCounterServerRpc();
+        }
     }
     public void FindPath(TileCube tc, ref List<TileCube> path)
     {
@@ -291,6 +306,14 @@ public class Unit : NetworkBehaviour, ISwitchable
     {
         if (!IsOwner)
             return;
+        if(TurnManager.instance.currentTeam.Value != team.Value)
+            return;
+        if(isDisabled() && turnCoutner.Value < 3)
+            return;
+        else{
+            NullifyTurnCounterServerRpc();
+            Enable();
+        }
         // If mouse is in Idle state unit can be selected
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
         {
@@ -318,6 +341,8 @@ public class Unit : NetworkBehaviour, ISwitchable
     private void Update()
     {
         stateMachine.Update();
+        if(TurnManager.instance.currentTeam.Value != team.Value)
+            stateMachine.ChangeState(new UnitStates.Idle(this));
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -363,7 +388,7 @@ public class Unit : NetworkBehaviour, ISwitchable
         {
             ChangePositionServerRpc(path[0].coord.Value);
             //standingOn.unit = this;
-            BoardManager.instance.BlockTileServerRpc(standingOn.Value);
+            BoardManager.instance.BlockTileServerRpc(path[0].coord.Value);
         }
         if (path.Count == 0)
         {
@@ -423,5 +448,45 @@ public class Unit : NetworkBehaviour, ISwitchable
         ChangePositionServerRpc(dest);
         TileCube tile = BoardManager.instance.GetTileAtPosition(dest);
         transform.position = new Vector3(tile.transform.position.x, this.transform.position.y, tile.transform.position.z);
+    }
+
+    public bool isDisabled()
+    {
+        return disabled.Value;
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void DisableServerRpc()
+    {
+        disabled.Value = true;
+        this.stateMachine.ChangeState(new UnitStates.Idle(this));
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void IncrementTurnCounterServerRpc()
+    {
+        turnCoutner.Value++;
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void NullifyTurnCounterServerRpc()
+    {
+        turnCoutner.Value = 0;
+    }
+    public void Disable()
+    {
+        DisableServerRpc();
+    }
+
+    [ServerRpc]
+    private void EnableServerRpc()
+    {
+        disabled.Value = false;
+    }
+    public void Enable()
+    {
+        EnableServerRpc();
+    }
+
+    Vector2Int ICanBeDisabled.WhereAmI()
+    {
+        return standingOn.Value;
     }
 }

@@ -15,7 +15,7 @@ namespace MouseStates
         }
         public void Enter()
         {
-            Debug.LogWarning("IN IDLE");
+            //Debug.LogWarning("IN IDLE");
             SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
         }
 
@@ -69,7 +69,7 @@ namespace MouseStates
         public void Execute()
         {
             //!I think there is a problem
-            if (Input.GetKeyDown(KeyCode.Escape) && stateOwner.selectedUnit.stateMachine.currentState is UnitStates.Selected)
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
                 stateOwner.mouseStateMachine.ChangeState(new MouseStates.Idle(stateOwner));
                 Debug.LogWarning("MOUSE IS IN IDLE STATE");
@@ -106,7 +106,14 @@ public class MouseController : NetworkBehaviour
     private void Start()
     {
         mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+        TurnManager.instance.currentTeam.OnValueChanged += OnTurnChanged;
     }
+
+    void OnTurnChanged(int prev, int curr)
+    {
+        if(curr != team.Value)
+            mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+    } 
     private void Update()
     {
         if (!IsOwner)

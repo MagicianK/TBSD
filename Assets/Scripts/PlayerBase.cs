@@ -64,6 +64,10 @@ namespace PlayerBaseStates
             {
                 CreateUnit(2);
             }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                CreateUnit(3);
+            }
         }
 
         public void Exit()
@@ -87,12 +91,11 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     
     // ! Needs to be NetworkVariable
     public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
-    [SerializeField]
-    private HealthBar _healthBar;
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
     public string ProductName { get => productName; set => productName = value; }
+    public NetworkVariable<bool> isChecked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
 
     public void Initialize()
     {
@@ -108,11 +111,48 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
             GetComponentInChildren<Renderer>().material.color = Color.red;
         stateMachine.ChangeState(new PlayerBaseStates.Idle(this));
         health.Value = unitData.Health;
-        _healthBar.UpdateHealthBar(unitData.Health, health.Value);
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
+        
     }
+    public void OnTurnChanged(int prev, int curr)
+    {
+        
+        // Debug.LogWarning($"wow {prev} -> {curr}"); 
+        // if (curr != this.team.Value)
+        // {
+            
+        //     foreach (Unit unit in units)
+        //     {
+        //         if(unit == null){
+        //             units.Remove(unit);
+        //             continue;
+        //         }
 
+        //         unit.stateMachine.ChangeState(new UnitStates.Idle(unit));
+        //         unit.GetComponent<Unit>().enabled = false;
+        //         unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
+        //     }
+            
+        // }
+        // else{
+        //     foreach (Unit unit in units)
+        //     {
+        //         if(unit == null){
+        //             units.Remove(unit);
+        //             continue;
+        //         }
+        //         if(unit.isDisabled() && !isChecked.Value)
+        //         {
+        //             unit.IncrementTurnCounterServerRpc();
+        //         }
+
+        //         unit.GetComponent<Unit>().enabled = true;
+        //         unit.GetComponentInChildren<Renderer>().material.color = startColor;
+         
+        //     }
+        // }
+    }
     private void Update()
     {
         if (!IsOwner)
@@ -124,45 +164,31 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
         }
         stateMachine.Update();
-        
-        
-        if (TurnManager.instance.currentTeam.Value != this.team.Value)
-        {
-            foreach (Unit unit in units)
-            {
-                if(unit == null){
-                    units.Remove(unit);
-                    continue;
-                }
-                unit.stateMachine.ChangeState(new UnitStates.Idle(unit));
-                unit.GetComponent<Unit>().enabled = false;
-                unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
-            }
-            if(!(mouseController is MouseStates.Idle))
-                mouseController.mouseStateMachine.ChangeState(new MouseStates.Idle(mouseController));
-            
-        }
-        else
-        {
-            foreach (Unit unit in units)
-            {
-                if(unit == null){
-                    units.Remove(unit);
-                    continue;
-                }
-                
-                unit.GetComponent<Unit>().enabled = true;
-                unit.GetComponentInChildren<Renderer>().material.color = startColor;
-            }
-            
-        }
+
     }
-    
+    [ServerRpc(RequireOwnership = false)]
+    public void CheckServerRpc()
+    {
+        isChecked.Value = true;
+    }
+    public void Uncheck()
+    {
+        ///UncheckServerRpc();
+    }
+    // [ServerRpc(RequireOwnership = false)]
+    // public void CheckServerRpc()
+    // {
+    //     isChecked.Value = true;
+    // }
+    public void Check()
+    {
+        CheckServerRpc();
+    }
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
         if(IsServer)
-            NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Additive);
+            NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     public Vector2Int GetStandingOnTile()
@@ -180,14 +206,12 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public void TakeDamageServerRpc(int damage)
     {
         this.health.Value -= damage;
-        _healthBar.UpdateHealthBar(unitData.Health, this.health.Value);
         if (this.health.Value <= 0)
             Destroy(gameObject);
     }
     public void TakeDamage(int damage)
     {
         TakeDamageServerRpc(damage);
-        _healthBar.UpdateHealthBar(unitData.Health, this.health.Value);
     }
     [ServerRpc(RequireOwnership = false)]
     public void CreateUnitServerRpc(Vector2Int pos, ulong clientId, int type)
@@ -241,7 +265,8 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     {
         if (!IsOwner)
             return;
-        
+        if(TurnManager.instance.currentTeam.Value != team.Value)
+            return;
         // Enables selection state only if Mouse state is Idle and it is their turn
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
         //GameManager.instance.turnSystem.currentTeam == this.team

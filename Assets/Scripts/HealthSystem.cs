@@ -6,22 +6,26 @@ using Unity.Netcode;
 public class HealthSystem : NetworkBehaviour, IDamagable
 {
     public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
+
     Unit unit;
     [ServerRpc(RequireOwnership = false)]
     public void SetHealthServerRpc()
     {
         health.Value = unit.unitData.Health;
+        
     }
     private void Start() {
         if(TryGetComponent<Unit>(out Unit unit))
             this.unit = unit;
         
         SetHealthServerRpc();
+       
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void TakeDamageServerRpc(int damage){
         this.health.Value -= damage;
+
         if (IsDead()){
             unit.DestroyServerRpc();
         }
@@ -29,6 +33,7 @@ public class HealthSystem : NetworkBehaviour, IDamagable
     public void TakeDamage(int damage)
     {
         TakeDamageServerRpc(damage);
+       
     }
     public bool IsDead()
     {
