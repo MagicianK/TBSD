@@ -387,6 +387,12 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
     // Moves the Unit along retrieved path from PathFinding script
     public void MoveAlongPath()
     {
+        if (path.Count == 0)
+        {
+            Debug.Log("Path counted 0");
+            stateMachine.ChangeState(new UnitStates.Selected(this));
+            return;
+        }
         var step = MOVEMENT_ANIMATION_SPEED * Time.deltaTime;
 
         var yIndex = path[0].transform.position.y;
@@ -403,11 +409,6 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
             ChangePositionServerRpc(path[0].coord.Value);
             //standingOn.unit = this;
             BoardManager.instance.BlockTileServerRpc(path[0].coord.Value);
-        }
-        if (path.Count == 0)
-        {
-            Debug.Log("Path counted 0");
-            stateMachine.ChangeState(new UnitStates.Selected(this));
         }
     }
 
