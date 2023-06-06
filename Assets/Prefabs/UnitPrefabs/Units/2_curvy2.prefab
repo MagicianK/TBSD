@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -6845515840820977398}
   - component: {fileID: 4869744808355367568}
   - component: {fileID: 4811742631455826040}
-  - component: {fileID: 2645921378903006209}
+  - component: {fileID: 6550949383382020712}
   m_Layer: 0
   m_Name: 2_curvy2
   m_TagString: Untagged
@@ -129,7 +129,7 @@ MonoBehaviour:
   ScaleThreshold: 0.01
   InLocalSpace: 0
   Interpolate: 1
---- !u!114 &2645921378903006209
+--- !u!114 &6550949383382020712
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,7 +138,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3219905075132998754}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: efdd7e830c5218f4787b068a2d2989b4, type: 3}
+  m_Script: {fileID: 11500000, guid: a1294c2d2c20cec4181397e1fb065a9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   unit: {fileID: 0}

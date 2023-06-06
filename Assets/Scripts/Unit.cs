@@ -288,20 +288,9 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
         inRangeTiles = new List<TileCube>();
         if (IsOwner)
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
-        if (IsOwner)
-            TurnManager.instance.currentTeam.OnValueChanged += OnTurnChanged;
+
     }
-    void OnTurnChanged(int prev, int curr)
-    {
-        if(isDisabled() && turnCoutner.Value < 3)
-        {
-            IncrementTurnCounterServerRpc();
-        }
-        else{
-            Enable();
-            NullifyTurnCounterServerRpc();
-        }
-    }
+
     public void FindPath(TileCube tc, ref List<TileCube> path)
     {
 
@@ -313,12 +302,12 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
             return;
         if(TurnManager.instance.currentTeam.Value != team.Value)
             return;
-        if(isDisabled() && turnCoutner.Value < 3)
-            return;
-        else{
-            NullifyTurnCounterServerRpc();
-            Enable();
-        }
+        // if(isDisabled() && turnCoutner.Value < 3)
+        //     return;
+        // else{
+        //     NullifyTurnCounterServerRpc();
+        //     Enable();
+        // }
         // If mouse is in Idle state unit can be selected
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
         {
