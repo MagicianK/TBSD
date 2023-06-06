@@ -244,6 +244,7 @@ namespace UnitStates
 
         public void Exit()
         {
+            SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
         }
     }
 }

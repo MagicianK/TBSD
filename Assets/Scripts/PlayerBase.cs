@@ -15,6 +15,7 @@ namespace PlayerBaseStates
 
         public void Enter()
         {
+            SelectedView.instance.MoveTo(new Vector3(0, -5, 0));
         }
 
         public void Execute()
@@ -35,6 +36,7 @@ namespace PlayerBaseStates
 
         public void Enter()
         {
+            SelectedView.instance.MoveTo(stateOwner.transform.position);
         }
 
         public void Execute()
@@ -72,6 +74,7 @@ namespace PlayerBaseStates
 
         public void Exit()
         {
+            
         }
     }
 }
@@ -186,6 +189,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
+        mouseController.InLostServerRpc();
         TurnManager.instance.ChangeSceneServerRpc();
     }
 

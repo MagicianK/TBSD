@@ -94,6 +94,7 @@ public class MouseController : NetworkBehaviour
     public NetworkVariable<int> team = new NetworkVariable<int>();
     public TileCube clickedTile;
     public PlayerBase playerBase;
+    public NetworkVariable<bool> isLost = new NetworkVariable<bool>(default, NetworkVariableReadPermission.Everyone);
     public override void OnNetworkSpawn()
     {
         if (!IsOwner)
@@ -105,14 +106,19 @@ public class MouseController : NetworkBehaviour
     }
     private void Start()
     {
+        gameObject.GetComponent<NetworkObject>().DestroyWithScene = false;
         mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+
         TurnManager.instance.currentTeam.OnValueChanged += OnTurnChanged;
     }
-
+    [ServerRpc(RequireOwnership = false)]
+    public void InLostServerRpc()
+    {
+        isLost.Value = true;
+    }
     void OnTurnChanged(int prev, int curr)
     {
-        if(curr != team.Value)
-            mouseStateMachine.ChangeState(new MouseStates.Idle(this));
+        mouseStateMachine.ChangeState(new MouseStates.Idle(this));
     } 
     private void Update()
     {

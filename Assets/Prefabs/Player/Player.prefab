@@ -45,8 +45,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0545ce6cf9a813249812067d9bc7fc0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedUnit: {fileID: 0}
-  team: 0
+  team:
+    m_InternalValue: 0
+  clickedTile: {fileID: 0}
+  playerBase: {fileID: 0}
+  isLost:
+    m_InternalValue: 0
 --- !u!114 &-8709874927571279007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,5 +65,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GlobalObjectIdHash: 951099334
   AlwaysReplicateAsRoot: 0
-  DontDestroyWithOwner: 0
+  DontDestroyWithOwner: 1
   AutoObjectParentSync: 1
