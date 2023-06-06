@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 namespace PlayerBaseStates
 {
@@ -42,7 +41,7 @@ namespace PlayerBaseStates
         public void Execute()
         {
             void CreateUnit(int type)
-            {   
+            {
                 List<TileCube> tiles = RangeFinder.GetTilesRange(stateOwner.standingOn.Value, 1);
 
                 foreach (var tile in tiles)
@@ -53,14 +52,14 @@ namespace PlayerBaseStates
                         Debug.Log("Creating Unit");
                         BoardManager.instance.BlockTileServerRpc(tile.coord.Value);
                         stateOwner.CreateUnitServerRpc(tile.coord.Value, stateOwner.OwnerClientId, type);
-                        
+
                         break;
                     }
                 }
             }
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                CreateUnit(1);  
+                CreateUnit(1);
             }
             if (Input.GetKeyDown(KeyCode.Alpha2))
             {
@@ -74,7 +73,6 @@ namespace PlayerBaseStates
 
         public void Exit()
         {
-            
         }
     }
 }
@@ -91,24 +89,25 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     public MouseController mouseController;
     public List<Unit> units;
-    
+
     // ! Needs to be NetworkVariable
     public NetworkVariable<int> health = new NetworkVariable<int>(default, NetworkVariableReadPermission.Everyone);
+
     public RangeFinder rangeFinder = new RangeFinder();
     public NetworkVariable<Vector2Int> standingOn = new NetworkVariable<Vector2Int>(default, NetworkVariableReadPermission.Everyone);
     private Color startColor;
-    public string ProductName { get => productName; set => productName = value; }
     public NetworkVariable<bool> isChecked = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone);
+
+    public string ProductName { get; set; }
 
     public void Initialize()
     {
-        gameObject.name = productName;
     }
 
     // Start is called before the first frame update
     private void Start()
     {
-        if(IsOwner)
+        if (IsOwner)
             GetComponentInChildren<Renderer>().material.color = Color.blue;
         else
             GetComponentInChildren<Renderer>().material.color = Color.red;
@@ -116,15 +115,13 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         health.Value = unitData.Health;
         startColor = GetComponentInChildren<Renderer>().material.color;
         units = new List<Unit>();
-        
     }
+
     public void OnTurnChanged(int prev, int curr)
     {
-        
-        // Debug.LogWarning($"wow {prev} -> {curr}"); 
+        // Debug.LogWarning($"wow {prev} -> {curr}");
         // if (curr != this.team.Value)
         // {
-            
         //     foreach (Unit unit in units)
         //     {
         //         if(unit == null){
@@ -136,7 +133,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         //         unit.GetComponent<Unit>().enabled = false;
         //         unit.GetComponentInChildren<Renderer>().material.color = Color.gray;
         //     }
-            
+
         // }
         // else{
         //     foreach (Unit unit in units)
@@ -152,31 +149,35 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
         //         unit.GetComponent<Unit>().enabled = true;
         //         unit.GetComponentInChildren<Renderer>().material.color = startColor;
-         
+
         //     }
         // }
     }
+
     private void Update()
     {
         if (!IsOwner)
             return;
         // ! Temporary solution
         // ? how to assign mouseController to it in a better way?
-        if (!mouseController){
+        if (!mouseController)
+        {
             mouseController = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<MouseController>();
-
         }
         stateMachine.Update();
     }
+
     [ServerRpc(RequireOwnership = false)]
     public void CheckServerRpc()
     {
         isChecked.Value = true;
     }
+
     public void Uncheck()
     {
         ///UncheckServerRpc();
     }
+
     // [ServerRpc(RequireOwnership = false)]
     // public void CheckServerRpc()
     // {
@@ -186,6 +187,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     {
         CheckServerRpc();
     }
+
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
@@ -211,37 +213,41 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         if (this.health.Value <= 0)
             Destroy(gameObject);
     }
+
     public void TakeDamage(int damage)
     {
         TakeDamageServerRpc(damage);
     }
+
     [ServerRpc(RequireOwnership = false)]
     public void CreateUnitServerRpc(Vector2Int pos, ulong clientId, int type)
     {
         GameObject unitToCreate = unit1prefab.gameObject;
-        switch(type)
+        switch (type)
         {
             case 1:
                 unitToCreate = unit1prefab.gameObject;
-            break;
+                break;
+
             case 2:
                 unitToCreate = unit2prefab.gameObject;
-            break;
+                break;
+
             case 3:
                 unitToCreate = unit3prefab.gameObject;
-            break;
+                break;
         }
-        GameObject unitToPlace = Instantiate(unitToCreate);
+        GameObject unitToPlace = Instantiate(unitToCreate, this.transform.position, this.transform.rotation);
         unitToPlace.GetComponent<Unit>().NetworkObject.SpawnWithOwnership(clientId);
 
         CreateUnitClientRpc(pos, unitToPlace.GetComponent<Unit>().NetworkObject.NetworkObjectId);
-
     }
+
     [ClientRpc]
     public void CreateUnitClientRpc(Vector2Int pos, ulong networkId)
     {
         CreateUnit(pos, networkId);
-    }   
+    }
 
     public void CreateUnit(Vector2Int pos, ulong networkId)
     {
@@ -249,7 +255,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         Unit[] units = FindObjectsOfType<Unit>();
         foreach (Unit unit in units)
         {
-            if(unit.NetworkObjectId == networkId)
+            if (unit.NetworkObjectId == networkId)
                 unitCreation = unit;
         }
         unitCreation.InitValues(pos);
@@ -258,16 +264,18 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
         mouseController.selectedUnit = unitCreation;
         this.units.Add(unitCreation);
     }
+
     [ServerRpc(RequireOwnership = false)]
     public void SetTeamServerRpc(int team)
     {
         this.team.Value = team;
     }
+
     private void OnMouseDown()
     {
         if (!IsOwner)
             return;
-        if(TurnManager.instance.currentTeam.Value != team.Value)
+        if (TurnManager.instance.currentTeam.Value != team.Value)
             return;
         // Enables selection state only if Mouse state is Idle and it is their turn
         if (mouseController.mouseStateMachine.currentState is MouseStates.Idle)
@@ -281,14 +289,14 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
     private void OnMouseEnter()
     {
-        if(!IsOwner)
+        if (!IsOwner)
             return;
         GetComponentInChildren<Renderer>().material.color = Color.white;
     }
 
     private void OnMouseExit()
     {
-        if(!IsOwner)
+        if (!IsOwner)
             return;
         GetComponentInChildren<Renderer>().material.color = startColor;
     }
