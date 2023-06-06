@@ -6733,3 +6733,4 @@ MonoBehaviour:
   playerCountText: {fileID: 201724047}
   leaveLobbyButton: {fileID: 142253326}
   startGameButton: {fileID: 2119572227}
+  changeName: {fileID: 1219693070}
