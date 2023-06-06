@@ -32,6 +32,11 @@ public class TurnManager : NetworkBehaviour
     private void Start() {
         currentTeam.OnValueChanged += OnTurnChanged;
     }
+    [ServerRpc(RequireOwnership = false)]
+    public void ChangeSceneServerRpc()
+    {
+        NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
     void OnTurnChanged(int prev, int curr)
     {
         text.text = "Team turn: " + curr;

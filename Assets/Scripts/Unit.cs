@@ -91,16 +91,18 @@ namespace UnitStates
         public void Enter()
         {
             stateOwner.GetInRangeTiles();
+            TurnManager.instance.StartTurnServerRpc();
         }
 
         public void Execute()
         {
-            prey.TakeDamage(4);
+            prey.TakeDamage(Math.Abs(stateOwner.unitData.MovementRange - stateOwner.unitData.Health));
             stateOwner.stateMachine.ChangeState(new Selected(stateOwner));
         }
 
         public void Exit()
         {
+            TurnManager.instance.EndTurnServerRpc();
             //GameManager.instance.turnSystem.MakeTurn();
             stateOwner.ClearRange();
         }
@@ -275,6 +277,10 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
     }
     private void Start()
     {
+        if(IsOwner)
+            GetComponentInChildren<Renderer>().material.color = Color.blue;
+        else
+            GetComponentInChildren<Renderer>().material.color = Color.red; 
         ability = GetComponent<IAbility>();
         healthSystem = GetComponent<HealthSystem>();
         pathFinder = new PathFinder();
@@ -330,11 +336,17 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
     }
     private void OnMouseEnter()
     {
+        if(!IsOwner)
+            return;
+            
+        startColor = GetComponentInChildren<Renderer>().material.color;
         GetComponentInChildren<Renderer>().material.color = Color.white;
     }
 
     private void OnMouseExit()
     {
+        if(!IsOwner)
+            return;
         GetComponentInChildren<Renderer>().material.color = startColor;
     }
 
@@ -353,6 +365,7 @@ public class Unit : NetworkBehaviour, ISwitchable, ICanBeDisabled
     }
     public override void OnNetworkDespawn()
     {
+        BoardManager.instance.UnblockTileServerRpc(standingOn.Value);
         Debug.Log("Ive been Destroyed");
     }
 

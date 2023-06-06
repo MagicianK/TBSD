@@ -14,6 +14,14 @@ public class HealthSystem : NetworkBehaviour, IDamagable
         health.Value = unit.unitData.Health;
         
     }
+    [ClientRpc]
+    public void UpdateHealthAlphaChannelClientRpc(float maxHealth, float currentHealth)
+    {
+        Color color = gameObject.GetComponentInChildren<Renderer>().material.color;
+        float colorDriver = 1 - currentHealth/maxHealth;
+        gameObject.GetComponentInChildren<Renderer>().material.color = new Color(Mathf.Clamp(color.r - colorDriver, 0, 1), Mathf.Clamp(color.g - colorDriver, 0, 1), Mathf.Clamp(color.b - colorDriver, 0, 1), currentHealth/maxHealth);
+    }
+
     private void Start() {
         if(TryGetComponent<Unit>(out Unit unit))
             this.unit = unit;
@@ -25,7 +33,7 @@ public class HealthSystem : NetworkBehaviour, IDamagable
     [ServerRpc(RequireOwnership = false)]
     public void TakeDamageServerRpc(int damage){
         this.health.Value -= damage;
-
+        UpdateHealthAlphaChannelClientRpc(unit.unitData.Health, this.health.Value);
         if (IsDead()){
             unit.DestroyServerRpc();
         }

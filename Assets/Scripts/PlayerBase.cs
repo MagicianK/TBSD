@@ -164,7 +164,6 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
 
         }
         stateMachine.Update();
-
     }
     [ServerRpc(RequireOwnership = false)]
     public void CheckServerRpc()
@@ -187,8 +186,7 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public override void OnNetworkDespawn()
     {
         Debug.Log($"Player {(this.team.Value == 1 ? 0 : 1)} won!!!");
-        if(IsServer)
-            NetworkManager.SceneManager.LoadScene("GameOver", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        TurnManager.instance.ChangeSceneServerRpc();
     }
 
     public Vector2Int GetStandingOnTile()
