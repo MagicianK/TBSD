@@ -210,8 +210,10 @@ public class PlayerBase : NetworkBehaviour, IDamagable, IProduct
     public void TakeDamageServerRpc(int damage)
     {
         this.health.Value -= damage;
-        if (this.health.Value <= 0)
+        if (this.health.Value <= 0){
             Destroy(gameObject);
+            NetworkObject.Despawn();
+        }
     }
 
     public void TakeDamage(int damage)

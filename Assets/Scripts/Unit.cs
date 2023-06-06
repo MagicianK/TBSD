@@ -234,7 +234,7 @@ namespace UnitStates
             {
                 owner.stateMachine.ChangeState(new InCharge(owner));
             }
-            else if (Input.GetKeyDown(KeyCode.S))
+            else if (Input.GetKeyDown(KeyCode.S) && owner.ability != null)
             {
                 owner.stateMachine.ChangeState(new OnAbilityState(owner));
             }
